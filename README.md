@@ -7,12 +7,14 @@
 - Input files を取り込んで、TSS を決定し、TSS に基づいて annotation 5'UTR を gtf file に付加しアップデートした gtf file を output file として出力する  
 
 ### Input files  
+
 - CAGE-seq Read  
 - reference genome (fasta)  
 - gtf file  
 - BSgenome_data_package_seed_file (.txt)  
 
 ### Output file  
+
 - updated gtf file (.gtf)  
 
 ***
