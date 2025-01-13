@@ -20,6 +20,9 @@
 #### scripts for each step  
 
 - 01_split_genome_seqs_4_prepare_BSgenome_data_package_seed_file.sh  
+  
+      % zsh 01_split_genome_seqs_4_prepare_BSgenome_data_package_seed_file.sh "genome file"
+
     - BSgenome_data_package_seed_file 用にゲノムfastaファイルを sequence ID ごとに分割  
     - seqkit を使用  
         - Version: 2.8.2  
@@ -27,4 +30,11 @@
         - -i ; sequence id で分割  
         - -o ; output directory の指定  
 
-- 
+
+- 02_trimming_by_fastp.sh  
+    - CAGE-Seq read を fastp でトリミング  
+    - default  
+    - adaptor のトリミングが主  
+    - fastp  
+        - Version: 0.23.4  
+    - Input: cage-seq read (.fastq.gz)
