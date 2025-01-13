@@ -1,4 +1,5 @@
 #! /bin/zsh
 
+# genome file: Halichoeres_trimaculatus-hifiasm-3ddna-v1.1.edit.fna.gz
 
-seqkit split Halichoeres_trimaculatus-hifiasm-3ddna-v1.1.edit.fna.gz -i -O ./seqs_by_scaffold
+seqkit $1 -i -O ./seqs_by_scaffold
