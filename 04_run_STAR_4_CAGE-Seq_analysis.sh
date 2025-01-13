@@ -3,6 +3,7 @@
 # This script is used to map the reads to the Htri genome using STAR
 # check ulimit "ulimit -a" 
 # before running # set "ulimit -n 2048"
+# index directory = 03_ で作成したディレクトリとなる
 
 sample=($(ls *_trim_R1.fq.gz | sed 's/_trim_R1.fq.gz//'))
 
@@ -12,7 +13,7 @@ echo "run STAR for Htri selected reference genome and gtf file" `date '+%Y/%m/%d
 STAR --version >> run_star.log 2>&1
 
 for i in ${sample[@]};do
-STAR --genomeDir ./${index_dir}/ \
+STAR --genomeDir ./$1/ \
 --readFilesCommand zless \
 --readFilesIn ${i}_trim_R1.fq.gz ${i}_trim_R2.fq.gz \
 --runThreadN `sysctl -n hw.physicalcpu_max` \
