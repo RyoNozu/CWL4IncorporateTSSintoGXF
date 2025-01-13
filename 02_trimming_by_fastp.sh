@@ -9,6 +9,8 @@ sample=($(ls *_R1.fastq.gz | sed 's/_R1.fastq.gz//'))
 # -z: compression level for gzip output. 9 is smallest
 # -w: number of threads
 
+fastp -v >> run_fastp.log 2>&1
+
 for i in ${sample[@]};
 do
 fastp -i ${i}_R1.fastq.gz -I ${i}_R2.fastq.gz \
