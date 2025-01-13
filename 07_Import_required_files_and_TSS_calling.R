@@ -1,11 +1,11 @@
 # Import required files & TSS calling
 inputFiles <- list.files(path = "./", pattern = "Aligned.sortedByCoord.out.bam$", full.names = TRUE)
-inputFilesType <- "bamPairedEnd" # set “inputFilesType” as “bamPairedEnd” for paired-end BAM files, and as "TSStable" if the input file is a TSS table 
+inputFilesType <- "bamPairedEnd"  # set “inputFilesType” as “bamPairedEnd” for paired-end BAM files, and as "TSStable" if the input file is a TSS table 
 
 args <- commandArgs(trailingOnly=TRUE)
 refSource <- args[1] # コマンドライン引数からrefSourceを取得
-prefix1 <- args[2] # コマンドライン引数から1つ目のprefixを取得
-prefix2 <- args[3] # コマンドライン引数から2つ目のprefixを取得
+prefix1 <- args[2]   # コマンドライン引数から1つ目のprefixを取得
+prefix2 <- args[3]   # コマンドライン引数から2つ目のprefixを取得
 
 # グループごとにファイルを分ける
 group1_files <- inputFiles[1:(length(inputFiles)/2)]
