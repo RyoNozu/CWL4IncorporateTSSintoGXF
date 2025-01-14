@@ -1,4 +1,4 @@
-# CWL4gtf_update
+# CWL4updating_gtf
 
 - private repository for creating CWL for updating gtf  
 
