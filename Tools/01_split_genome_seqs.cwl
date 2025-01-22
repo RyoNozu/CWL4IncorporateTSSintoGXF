@@ -33,12 +33,18 @@ arguments:
 
 
 outputs:
-  - id: all-for-debugging
-    type:
-      type: array
-      items: [File, Directory]
+  - id: output_dir
+    type: Directory
+    label: "output directory"
+    doc: "output directory"
     outputBinding:
-      glob: "*"
+      glob: $(inputs.output_dir_name)
+  - id: split_seqs
+    type: File[]
+    label: "split sequence files"
+    doc: "split sequence files e.g. Halichoeres_trimaculatus-hifiasm-3ddna-v1.1.edit.part_HiC_scaffold_1.fna.gz"
+    outputBinding:
+      glob: "$(inputs.output_dir_name)/*.fna.gz"
 
 
 hints:
