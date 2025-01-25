@@ -20,3 +20,10 @@ cwltool --validate ./Tools/01_split_genome_seqs.cwl
 ```bash
 cwltool --debug --cachedir ./cwl_cache/ --outdir ./Data/ ./Tools/01_split_genome_seqs.cwl
 ```
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
