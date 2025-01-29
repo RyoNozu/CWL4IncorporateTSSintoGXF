@@ -39,7 +39,7 @@
 
     - CAGE-Seq read を fastp でトリミング  
     - default  
-    - adaptor のトリミングが主  
+    - adaptor のトリミングが主目的  
     - fastp  
         - Version: 0.23.4  
     - Input: cage-seq read (.fastq.gz)  
@@ -51,7 +51,7 @@
     - マッピングソフト STAR の index を作成  
     - 引数1の値でディレクトリを作成し、そこに出力  
     - STAR  
-        - Version:  
+        - Version: 2.7.11b  
     - 
 
 - 04_run_STAR_4_CAGE-Seq_analysis.sh  
