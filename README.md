@@ -62,4 +62,39 @@
     - sorted bam を出力  
     - 出力形式 (*Aligned.sortedByCoord.out.bam)  
     - option setting  
-        - 
+        - --alignEndsType Extend5pOfRead1  
+          
+              Note from TSSr README: If you ran STAR with the default alignment parameters (without using --alignEndsType Extend5pOfRead1), please ensure that you set softclippingAllowed = TRUE when running TSSr.  
+              => Mapping時 (by STAR) ↑オプションを付けておく  
+        -  
+
+- 05_Install_and_load_packages_4_TSSr.R  
+
+- 06_Generate_BSgenome_Package_4_target_species.r  
+
+    - seed file の準備 (下記にHtriの1例)  
+      
+          Package: BSgenome.Htrimaculatus.inhouse.Htriv1  
+          Title: Full genomic sequences for Halichoeres trimaculatus (Htriv1)  
+          Description: Full genomic sequences for Halichoeres trimaculatus (inhouse version  
+          Htriv1).  
+          Version: 1.0.0  
+          organism: Halichoeres trimaculatus  
+          common_name: three-spot wrasse  
+          genome: Htriv1  
+          provider: inhouse  
+          release_date: 2023/07/01  
+          source_url: https://github.com/RyoNozu/Htrimaculatus_genome  
+          organism_biocview: Halichoeres_trimaculatus  
+          BSgenomeObjname: Htrimaculatus  
+          circ_seqs: 0  
+          seqnames: paste("HiC_scaffold_", c(1:227), sep="")  
+          seqs_srcdir: /Volumes/project＿HtriTSS＿BU/Project_HtriTSS/ref_genome  
+          info/seqs_by_scaffold  
+          seqfiles_prefix: Halichoeres_trimaculatus-hifiasm-3ddna-v1.1.edit.part_  
+          seqfiles_suffix: .fa.gz  
+    
+    - 染色体 (scaffold) ごとに分割した genome sequence が必要  
+        - 01_split_xxx で対応済  
+
+- 07_Import_required_files_and_TSS_calling.R  
