@@ -25,6 +25,13 @@ myTSSr <- new("TSSr", genomeName = "BSgenome.Htrimaculatus.inhouse.Htriv1"
                  ,refSource = refSource
                  ,organismName = "Halichoeres trimaculatus")
 
-myTSSr
+
+### TSS calling
+## options
+# sequencingQualityThreshold: minimum sequencing quality score for a base to be considered (default:10, specified in integer)
+# mappingQualityThreshold: minimum mapping quality score for a read to be considered (default:20, specified in integer)
+# softClippingAllowed: (default: false), Note: If you ran STAR with the default alignment parameters (without using --alignEndsType Extend5pOfRead1), 
+#                                              please ensure that you set softclippingAllowed = TRUE when running TSSr. 
+##
 
 getTSS(myTSSr, sequencingQualityThreshold=20, mappingQualityThreshold=20)
