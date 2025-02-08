@@ -27,3 +27,16 @@ cwltool --debug --cachedir ./cwl_cache/ --outdir ./Data/ ./Tools/01_split_genome
 
 &nbsp;
 
+## 2025/02/08 memo
+
+- fastpのプロセスで複数ファイルの処理を行うCWLファイルを新たに作成
+- サブワークフローを作成して，複数ファイルの処理を行う
+- YAMLファイルにファイルのパスを記載して，サブワークフローを実行
+
+
+```bash
+cwltool --debug --outdir ./out/ ./workflow/01_trimming_fastq_subworkflow.cwl ./config/01_trimming_fastq_files.yml
+```
+
+
+

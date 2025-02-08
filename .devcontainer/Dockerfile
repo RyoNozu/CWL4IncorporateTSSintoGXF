@@ -41,8 +41,8 @@ RUN pip install \
     PyYAML==6.0.1 \ 
     requests==2.31.0 \ 
     polars==1.18.0 \
-    cwltool==3.1.20241024121129 \
-    cwltest==2.5.20240906231108 \
+    cwltool==3.1.20250110105449 \
+    cwltest==2.5.20241122133319 \
     cwl_runner==1.0 \
     argparse==1.4.0 \
     pipx==1.6.0 \

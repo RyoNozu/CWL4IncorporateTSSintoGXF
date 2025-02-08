@@ -2,7 +2,7 @@
 cwlVersion: v1.2
 class: CommandLineTool
 label: "trimming by fastp"
-doc: "trimming by fastp (for pair-end CAGE-seq fastq data). using fastp version 0.23.2. Modified from https://github.com/nigyta/bact_genome/blob/master/cwl/tool/fastp/fastp.cwl"
+doc: "trimming by fastp (for pair-end CAGE-seq fastq data). using fastp version 0.23.4. Modified from https://github.com/nigyta/bact_genome/blob/master/cwl/tool/fastp/fastp.cwl"
 requirements:
   InlineJavascriptRequirement: {}
 
@@ -25,11 +25,13 @@ arguments:
     - $(inputs.compression_level)
     - -w
     - $(inputs.threads)
+
 inputs:
     - id: fastq1
       type: File
       format: edam:format_1930
       label: "fastq1"
+      doc: "fastq1 file (e.g. MK.F1_R1.fastq.gz)"
       default:
         class: File
         format: edam:format_1930
@@ -38,18 +40,21 @@ inputs:
       type: File
       format: edam:format_1930
       label: "fastq2"
+      doc: "fastq2 file (e.g. MK.F1_R2.fastq.gz)"
       default:
         class: File
         format: edam:format_1930
         path: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.F1/MK.F1_R2.fastq.gz
     - id: compression_level
+      label: "compression level"
+      doc: "compression level (default: 9)"
       type: int
       default: 9
     - id: threads
+      label: "threads"
+      doc: "threads (default: 16)"
       type: int
       default: 16
-
-stdout: $(inputs.fastq1.basename.replace(/\.gz$|\.bz2$/, '').replace(/\.fq$|\.fastq$/, ''))_stdout_run_fastp.log
 
 outputs:
     - id: out_fastq1
@@ -87,10 +92,20 @@ outputs:
       doc: "stdout log file (e.g. MK.F1_R1_stdout_run_fastp.log)"
       outputBinding:
         glob: $(inputs.fastq1.basename.replace(/\.gz$|\.bz2$/, '').replace(/\.fq$|\.fastq$/, ''))_stdout_run_fastp.log
+    - id: stderr_log
+      type: File
+      format: edam:data_3671
+      label: "stderr log file"
+      doc: "stderr log file (e.g. MK.F1_R1_stderr_run_fastp.log)"
+      outputBinding:
+        glob: $(inputs.fastq1.basename.replace(/\.gz$|\.bz2$/, '').replace(/\.fq$|\.fastq$/, ''))_stderr_run_fastp.log
+
+stdout: $(inputs.fastq1.basename.replace(/\.gz$|\.bz2$/, '').replace(/\.fq$|\.fastq$/, ''))_stdout_run_fastp.log
+stderr: $(inputs.fastq1.basename.replace(/\.gz$|\.bz2$/, '').replace(/\.fq$|\.fastq$/, ''))_stderr_run_fastp.log
 
 hints:
   - class: DockerRequirement
-    dockerPull: quay.io/biocontainers/fastp:0.23.2--hadf994f_5
+    dockerPull: quay.io/biocontainers/fastp:0.23.4--h125f33a_4
 
 $namespaces:
   s: https://schema.org/

@@ -1,0 +1,66 @@
+fastq1_files:
+  - class: File
+    format: edam:format_1930
+    location: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.F1/MK.F1_R1.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.F1.Mix/MK.F1.Mix_R1.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.F2/MK.F2_R1.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.F3/MK.F3_R1.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.F4/MK.F4_R1.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.M1/MK.M1_R1.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.M1.Mix/MK.M1.Mix_R1.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.M2/MK.M2_R1.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.M3/MK.M3_R1.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.M4/MK.M4_R1.fastq.gz
+
+fastq2_files:
+  - class: File
+    format: edam:format_1930
+    location: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.F1/MK.F1_R2.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.F1.Mix/MK.F1.Mix_R2.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.F2/MK.F2_R2.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.F3/MK.F3_R2.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.F4/MK.F4_R2.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.M1/MK.M1_R2.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.M1.Mix/MK.M1.Mix_R2.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.M2/MK.M2_R2.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.M3/MK.M3_R2.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.M4/MK.M4_R2.fastq.gz
+    
+compression_level: 9
+threads: 16
