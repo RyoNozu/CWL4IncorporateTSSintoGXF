@@ -49,3 +49,12 @@ cwltool --debug --outdir ./out/ ./workflow/01_trimming_fastq_subworkflow.cwl ./c
 cwltool --debug --outdir ./Data/Halichoeres_trimaculatus/ ./Tools/03_pigz.cwl
 cwltool --debug --outdir ./out/ --cachedir ./cwl_cache/ ./Tools/04_make_star_index.cwl
 ```
+
+&nbsp;
+
+- STARによるマッピングプロセスも `ScatterFeatureRequirement` を使ってサブワークフローにすることで複数ファイルに対応
+- なぜか `--readFilesCommand` のオプションを `zless` にするとエラーが出るので，`--readFilesCommand zcat` にしている
+
+```bash
+cwltool --debug --outdir ./out/ --cachedir ./cwl_cache/ ./workflow/02_star4cageseq_analysis_subworkflow.cwl ./config/02_star4cageseq_analysis.yml
+```
