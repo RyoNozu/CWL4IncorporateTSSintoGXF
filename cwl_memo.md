@@ -38,5 +38,14 @@ cwltool --debug --cachedir ./cwl_cache/ --outdir ./Data/ ./Tools/01_split_genome
 cwltool --debug --outdir ./out/ ./workflow/01_trimming_fastq_subworkflow.cwl ./config/01_trimming_fastq_files.yml
 ```
 
+&nbsp;
 
+## 2025/02/09 memo
 
+- STARでindexを作成するファイルを作成
+- reference genomeのfastaファイルをdecompressする処理とSTARでindexを作成する処理を分離
+
+```bash
+cwltool --debug --outdir ./Data/Halichoeres_trimaculatus/ ./Tools/03_pigz.cwl
+cwltool --debug --outdir ./out/ --cachedir ./cwl_cache/ ./Tools/04_make_star_index.cwl
+```
