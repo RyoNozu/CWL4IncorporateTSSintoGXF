@@ -2,26 +2,37 @@
 inputFiles <- list.files(path = "./", pattern = "Aligned.sortedByCoord.out.bam$", full.names = TRUE)
 inputFilesType <- "bamPairedEnd"  # set “inputFilesType” as “bamPairedEnd” for paired-end BAM files, and as "TSStable" if the input file is a TSS table 
 
-args <- commandArgs(trailingOnly=TRUE)
+args <- commandArgs(trailingOnly = TRUE)
 refSource <- args[1] # コマンドライン引数からrefSourceを取得
-prefix1 <- args[2]   # コマンドライン引数から1つ目のprefixを取得
-prefix2 <- args[3]   # コマンドライン引数から2つ目のprefixを取得
+group_count <- as.integer(args[2]) # コマンドライン引数からグループ数を取得
+group_sizes <- as.integer(args[3:(2 + group_count)]) # コマンドライン引数から各グループのファイル数を取得
+prefixes <- args[(3 + group_count):(2 + 2 * group_count)] # コマンドライン引数から各グループのprefixを取得
 
 # グループごとにファイルを分ける
-group1_files <- inputFiles[1:(length(inputFiles)/2)]
-group2_files <- inputFiles[(length(inputFiles)/2 + 1):length(inputFiles)]
+start_index <- 1
+group_files <- list()
+for (i in 1:group_count) {
+  end_index <- start_index + group_sizes[i] - 1
+  group_files[[i]] <- inputFiles[start_index:end_index]
+  start_index <- end_index + 1
+}
 
 # サンプルラベルを生成
-sampleLabels_group1 <- paste0(prefix1, sprintf("%02d", 1:length(group1_files)))
-sampleLabels_group2 <- paste0(prefix2, sprintf("%02d", 1:length(group2_files)))
-sampleLabels <- c(sampleLabels_group1, sampleLabels_group2)
+sampleLabels <- unlist(lapply(1:group_count, function(i) {
+  paste0(prefixes[i], sprintf("%02d", 1:length(group_files[[i]])))
+}))
+
+# mergeIndexを生成
+mergeIndex <- unlist(lapply(1:group_count, function(i) {
+  rep(i, length(group_files[[i]]))
+}))
 
 myTSSr <- new("TSSr", genomeName = "BSgenome.Htrimaculatus.inhouse.Htriv1"
                  ,inputFiles = inputFiles
                  ,inputFilesType = inputFilesType
                  ,sampleLabels = sampleLabels
-                 ,sampleLabelsMerged = c("group1","group2")
-                 ,mergeIndex = c(rep(1, length(group1_files)), rep(2, length(group2_files)))
+                 ,sampleLabelsMerged = paste0("group", 1:group_count)
+                 ,mergeIndex = mergeIndex
                  ,refSource = refSource
                  ,organismName = "Halichoeres trimaculatus")
 
