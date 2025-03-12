@@ -1,0 +1,63 @@
+star_index_dir: 
+  class: Directory
+  location: /Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/out/star_genome_idx
+star_threads: 16
+
+
+
+cage_seq_reads_1:
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/out/SRR17709722_1_trim.fq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/out/SRR17709723_1_trim.fq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/out/SRR17709724_1_trim.fq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/out/SRR17709725_1_trim.fq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/out/SRR18327318_1_trim.fq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/out/SRR18327319_1_trim.fq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/out/SRR18327320_1_trim.fq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/out/SRR18327321_1_trim.fq.gz
+
+cage_seq_reads_2:
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/out/SRR17709722_2_trim.fq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/out/SRR17709723_2_trim.fq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/out/SRR17709724_2_trim.fq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/out/SRR17709725_2_trim.fq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/out/SRR18327318_2_trim.fq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/out/SRR18327319_2_trim.fq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/out/SRR18327320_2_trim.fq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/out/SRR18327321_2_trim.fq.gz
+
+
+
+
+

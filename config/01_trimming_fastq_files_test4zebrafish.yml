@@ -1,0 +1,54 @@
+fastq1_files:
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/Project_HtriTSS/data_public/Zebrafish/20250128_acc_NCBI-sra_zebrafish-cage/SRR17709722_1.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/Project_HtriTSS/data_public/Zebrafish/20250128_acc_NCBI-sra_zebrafish-cage/SRR17709723_1.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/Project_HtriTSS/data_public/Zebrafish/20250128_acc_NCBI-sra_zebrafish-cage/SRR17709724_1.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/Project_HtriTSS/data_public/Zebrafish/20250128_acc_NCBI-sra_zebrafish-cage/SRR17709725_1.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/Project_HtriTSS/data_public/Zebrafish/20250128_acc_NCBI-sra_zebrafish-cage/SRR18327318_1.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/Project_HtriTSS/data_public/Zebrafish/20250128_acc_NCBI-sra_zebrafish-cage/SRR18327319_1.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/Project_HtriTSS/data_public/Zebrafish/20250128_acc_NCBI-sra_zebrafish-cage/SRR18327320_1.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/Project_HtriTSS/data_public/Zebrafish/20250128_acc_NCBI-sra_zebrafish-cage/SRR18327321_1.fastq.gz
+
+fastq2_files:
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/Project_HtriTSS/data_public/Zebrafish/20250128_acc_NCBI-sra_zebrafish-cage/SRR17709722_2.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/Project_HtriTSS/data_public/Zebrafish/20250128_acc_NCBI-sra_zebrafish-cage/SRR17709723_2.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/Project_HtriTSS/data_public/Zebrafish/20250128_acc_NCBI-sra_zebrafish-cage/SRR17709724_2.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/Project_HtriTSS/data_public/Zebrafish/20250128_acc_NCBI-sra_zebrafish-cage/SRR17709725_2.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/Project_HtriTSS/data_public/Zebrafish/20250128_acc_NCBI-sra_zebrafish-cage/SRR18327318_2.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/Project_HtriTSS/data_public/Zebrafish/20250128_acc_NCBI-sra_zebrafish-cage/SRR18327319_2.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/Project_HtriTSS/data_public/Zebrafish/20250128_acc_NCBI-sra_zebrafish-cage/SRR18327320_2.fastq.gz
+  - class: File
+    format: edam:format_1930
+    location: /Volumes/externalSSD4M3Max/Project_HtriTSS/data_public/Zebrafish/20250128_acc_NCBI-sra_zebrafish-cage/SRR18327321_2.fastq.gz
+    
+compression_level: 9
+threads: 16

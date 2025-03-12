@@ -1,6 +1,6 @@
 star_index_dir: 
   class: Directory
-  location: ../out/star_genome_idx
+  location: /Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/out/star_genome_idx
 star_threads: 16
 
 
