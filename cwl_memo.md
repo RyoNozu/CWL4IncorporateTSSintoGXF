@@ -58,3 +58,36 @@ cwltool --debug --outdir ./out/ --cachedir ./cwl_cache/ ./Tools/04_make_star_ind
 ```bash
 cwltool --debug --outdir ./out/ --cachedir ./cwl_cache/ ./workflow/02_star4cageseq_analysis_subworkflow.cwl ./config/02_star4cageseq_analysis.yml
 ```
+
+## 2025/03/13 memo by NZR
+
+オプション指定での実行でエラー
+
+```bash
+cwltool --debug --outdir ./out/ --cachedir ./cwl_cache/ ~/Google\ Drive/その他の 
+  ソコン/マイ\ MacBook\ Pro/Google_drive/Project_non-codingRegionAnnotation/CWL4gtf_update/CWL4gtf_update/Tools/04_make_star_index.cwl --reference_genome ./Data/Danio_rerio/GCF_000002035.6_GRCz11_genomic.fna --reference_genome_annotation ./Data/Danio_rerio/GCF_000002035.6_GRCz11_genomic.gtf
+```
+
+```DEBUG & ERROR message
+DEBUG Parsed job order from command line: {
+    "__id": "/Users/rnz/Google Drive/\u305d\u306e\u4ed6\u306e\u30d1\u30bd\u30b3\u30f3/\u30de\u30a4 MacBook Pro/Google_drive/Project_non-codingRegionAnnotation/CWL4gtf_update/CWL4gtf_update/Tools/04_make_star_index.cwl",
+    "output_dir_name": "star_genome_idx",
+    "reference_genome": {
+        "class": "File",
+        "location": "file:///Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/Data/Danio_rerio/GCF_000002035.6_GRCz11_genomic.fna"
+    },
+    "reference_genome_annotation": {
+        "class": "File",
+        "location": "file:///Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/Data/Danio_rerio/GCF_000002035.6_GRCz11_genomic.gtf"
+    },
+    "star_threads": 16
+}
+ERROR Workflow error:
+Expected value of 'reference_genome' to have format 'http://edamontology.org/format_1929' but
+ File has no 'format' defined: {
+    "class": "File",
+    "location": "file:///Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/Data/Danio_rerio/GCF_000002035.6_GRCz11_genomic.fna",
+    "size": 1700419557,
+    "basename": "GCF_000002035.6_GRCz11_genomic.fna",
+    "nameroot": "GCF_000002035.6_GRCz11_genomic",
+```
