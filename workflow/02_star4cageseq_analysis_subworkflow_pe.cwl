@@ -37,7 +37,7 @@ inputs:
 
 steps:
   - id: star_analysis
-    run: ../Tools/05_star4cageseq_analysis.cwl
+    run: ../Tools/05_star4cageseq_analysis_pe.cwl
     scatter: [cage_seq_read_1, cage_seq_read_2] # Parameters in Tool/05_star4cageseq_analysis.cwl should be listed here
     scatterMethod: dotproduct
     in:
@@ -99,9 +99,8 @@ outputs:
     
 hints:
   - class: DockerRequirement
-    dockerPull: quay.io/biocontainers/fastp:0.23.4--h125f33a_4
+    dockerPull:  quay.io/biocontainers/star:2.7.11b--h5ca1c30_5
 
 $namespaces:
   s: https://schema.org/
   edam: http://edamontology.org/
-      
