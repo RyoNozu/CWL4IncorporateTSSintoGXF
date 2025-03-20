@@ -129,3 +129,10 @@ Expected value of 'reference_genome' to have format 'http://edamontology.org/for
 
 - 以上の点からペアエンドとシングルエンドに対応したファイルをそれぞれ作成する
 - READMEとかには ペアエンド用はこれ、シングルエンド用はこれ、というふうな指示を書いておく 
+
+
+- seqkit -> STAR mapping までの処理 (paired-end) は一応成功
+
+```bash
+cwltool --debug --outdir ./test/ --cachedir ./cwl_cache/ ./workflow/cageseq_gtf_update_pe.cwl ./config/Workflow_config/cageseq_gtf_update_pe.yml
+```
