@@ -88,10 +88,6 @@ outputs:
       doc: "stderr log files"
       outputSource: trimming_fastp/stderr_log
 
-hints:
-  - class: DockerRequirement
-    dockerPull: quay.io/biocontainers/fastp:0.23.4--h125f33a_4
-
 $namespaces:
   s: https://schema.org/
   edam: http://edamontology.org/

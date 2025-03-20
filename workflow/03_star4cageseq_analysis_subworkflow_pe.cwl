@@ -96,10 +96,6 @@ outputs:
     doc: "STAR stderr files"
     format: edam:format_3671
     outputSource: star_analysis/log_stderr
-    
-hints:
-  - class: DockerRequirement
-    dockerPull:  quay.io/biocontainers/star:2.7.11b--h5ca1c30_5
 
 $namespaces:
   s: https://schema.org/
