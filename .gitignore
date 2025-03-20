@@ -4,3 +4,4 @@ Data/seqs_by_scaffold
 cwl_cache/
 .DS_Store
 out/
+test/

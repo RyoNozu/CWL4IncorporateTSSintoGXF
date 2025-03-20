@@ -38,7 +38,7 @@ inputs:
 steps:
   - id: star_analysis
     run: ../Tools/05_star4cageseq_analysis_pe.cwl
-    scatter: [cage_seq_read_1, cage_seq_read_2] # Parameters in Tool/05_star4cageseq_analysis.cwl should be listed here
+    scatter: [cage_seq_read_1, cage_seq_read_2] # Parameters in Tool/05_star4cageseq_analysis_pe.cwl should be listed here
     scatterMethod: dotproduct
     in:
       star_index_dir: star_index_dir

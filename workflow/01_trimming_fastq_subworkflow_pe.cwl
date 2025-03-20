@@ -36,7 +36,7 @@ inputs:
 steps:
     - id: trimming_fastp
       run: ../Tools/02_trimming_fastp_pe.cwl
-      scatter: [fastq1, fastq2] # Parameters in Tool/02_trimming_fastp.cwl should be listed here
+      scatter: [fastq1_files, fastq2_files] # Parameters in Tool/02_trimming_fastp_pe.cwl should be listed here
       scatterMethod: dotproduct
       in:
         fastq1: fastq1_files
