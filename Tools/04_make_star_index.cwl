@@ -81,4 +81,4 @@ hints:
 
 $namespaces:
   s: https://schema.org/
-  edam: http://edamontology.org/
+  edam: https://edamontology.org/
