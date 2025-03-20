@@ -1,7 +1,7 @@
 #!/usr/bin/env cwl-runner
 cwlVersion: v1.2
 class: Workflow
-label: "trimming fastq files (paired-end)"
+label: "trimming fastq files (single-end)"
 doc: "multiple fastq files trimming process using fastp version 0.23.4 and scatter feature requirement"
 
 requirements:
@@ -9,17 +9,11 @@ requirements:
   ScatterFeatureRequirement: {}
 
 inputs:
-    - id: fastq1_files
+    - id: fastq_files
       type: File[]
       format: edam:format_1930
-      label: "fastq1 files"
-      doc: "fastq1 files (e.g. MK.F1_R1.fastq.gz)"
-
-    - id: fastq2_files
-      type: File[]
-      format: edam:format_1930
-      label: "fastq2 files"
-      doc: "fastq2 files (e.g. MK.F1_R2.fastq.gz)"
+      label: "fastq files"
+      doc: "fastq files (e.g. MK.F1_R1.fastq.gz)"
 
     - id: compression_level
       type: int
@@ -35,30 +29,22 @@ inputs:
 
 steps:
     - id: trimming_fastp
-      run: ../Tools/02_trimming_fastp_pe.cwl
-      scatter: [fastq1, fastq2] # Parameters in Tool/02_trimming_fastp_pe.cwl should be listed here
+      run: ../Tools/02_trimming_fastp_se.cwl
+      scatter: [fastq] # Parameters in Tool/02_trimming_fastp_se.cwl should be listed here (not workflow input!)
       scatterMethod: dotproduct
       in:
-        fastq1: fastq1_files
-        fastq2: fastq2_files
+        fastq: fastq_files
         compression_level: compression_level
         threads: threads
-      out: [out_fastq1, out_fastq2, out_html, out_json, stdout_log, stderr_log]
+      out: [out_fastq, out_html, out_json, stdout_log, stderr_log]
 
 outputs:
-    - id: trimmed_fastq1_files
+    - id: trimmed_fastq_files
       type: File[]
       format: edam:format_1930
-      label: "trimmed fastq1 files"
-      doc: "trimmed fastq1 files"
-      outputSource: trimming_fastp/out_fastq1
-
-    - id: trimmed_fastq2_files
-      type: File[]
-      format: edam:format_1930
-      label: "trimmed fastq2 files"
-      doc: "trimmed fastq2 files"
-      outputSource: trimming_fastp/out_fastq2
+      label: "trimmed fastq files"
+      doc: "trimmed fastq files"
+      outputSource: trimming_fastp/out_fastq
 
     - id: trimming_report_html_files
       type: File[]

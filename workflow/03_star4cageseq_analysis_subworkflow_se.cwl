@@ -17,17 +17,11 @@ inputs:
       class: Directory
       location: ../out/star_genome_idx
 
-  - id: cage_seq_reads_1
+  - id: cage_seq_reads
     type: File[]
     format: edam:format_1930
-    label: "CAGE-Seq reads 1"
-    doc: "CAGE-Seq reads 1"
-
-  - id: cage_seq_reads_2
-    type: File[]
-    format: edam:format_1930
-    label: "CAGE-Seq reads 2"
-    doc: "CAGE-Seq reads 2"
+    label: "CAGE-Seq reads"
+    doc: "CAGE-Seq reads"
 
   - id: star_threads
     type: int
@@ -36,14 +30,13 @@ inputs:
     default: 16
 
 steps:
-  - id: star_analysis_pe
-    run: ../Tools/05_star4cageseq_analysis_pe.cwl
-    scatter: [cage_seq_read_1, cage_seq_read_2] # Parameters in Tool/05_star4cageseq_analysis_pe.cwl should be listed here
+  - id: star_analysis_se
+    run: ../Tools/05_star4cageseq_analysis_se.cwl
+    scatter: [cage_seq_read] # Parameters in Tool/05_star4cageseq_analysis_se.cwl should be listed here
     scatterMethod: dotproduct
     in:
       star_index_dir: star_index_dir
-      cage_seq_read_1: cage_seq_reads_1
-      cage_seq_read_2: cage_seq_reads_2
+      cage_seq_read: cage_seq_reads
       star_threads: star_threads
     out: [aligned_bam, final_log, main_log, progress_log, sj_tab, log_stdout, log_stderr]
 
@@ -53,49 +46,49 @@ outputs:
     label: "STAR aligned BAM files"
     doc: "STAR aligned BAM files"
     format: edam:format_2572
-    outputSource: star_analysis_pe/aligned_bam
+    outputSource: star_analysis_se/aligned_bam
 
   - id: final_log_files
     type: File[]
     label: "STAR final log files"
     doc: "STAR final log files"
     format: edam:format_3671
-    outputSource: star_analysis_pe/final_log
+    outputSource: star_analysis_se/final_log
 
   - id: main_log_files
     type: File[]
     label: "STAR main log files"
     doc: "STAR main log files"
     format: edam:format_3671
-    outputSource: star_analysis_pe/main_log
+    outputSource: star_analysis_se/main_log
 
   - id: progress_log_files
     type: File[]
     label: "STAR progress log files"
     doc: "STAR progress log files"
     format: edam:format_3671
-    outputSource: star_analysis_pe/progress_log
+    outputSource: star_analysis_se/progress_log
 
   - id: sj_tab_files
     type: File[]
     label: "STAR splice junctions tab files"
     doc: "STAR splice junctions tab files"
     format: edam:format_3671
-    outputSource: star_analysis_pe/sj_tab
+    outputSource: star_analysis_se/sj_tab
 
   - id: log_stdout_files
     type: File[]
     label: "STAR stdout files"
     doc: "STAR stdout files"
     format: edam:format_3671
-    outputSource: star_analysis_pe/log_stdout
+    outputSource: star_analysis_se/log_stdout
 
   - id: log_stderr_files
     type: File[]
     label: "STAR stderr files"
     doc: "STAR stderr files"
     format: edam:format_3671
-    outputSource: star_analysis_pe/log_stderr
+    outputSource: star_analysis_se/log_stderr
 
 $namespaces:
   s: https://schema.org/
