@@ -108,3 +108,10 @@ Expected value of 'reference_genome' to have format 'http://edamontology.org/for
 - パーツである `CommandLineTool`定義のファイルをそれぞれ SEとPEで作成
 - サブのパーツである `subworkflow` のファイルもそれぞれSE、PEで作成
 - (悩み中) すべてのプロセスを含む `workflow`定義のファイルに `when` 式を組み込むか、それともこちらもSEとPEのバージョンを両方作るか...
+
+&nbsp;
+
+## 2025/03/20 memo by yonezawa
+
+- `./Tools` ディレクトリにある `CommandLineTool`定義のファイル (ワークフローのパーツとなるもの) のうち、`fastp`と`STAR`の処理はそれぞれsingle-endに対応させた
+- `cwltool --validate` を実行して一応OKだったものの、まだ実際のファイルで実行していない
