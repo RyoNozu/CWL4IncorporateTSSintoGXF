@@ -193,15 +193,19 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
     updated_gtf_df = updated_gtf_df.drop_duplicates()
 
     # コメント行を元の位置に挿入
-    output_lines = []
-    for i, line in enumerate(lines):
-        if line.startswith('#'):
-            output_lines.append(line.strip())
-        else:
+    output_lines = lines.copy()  # 元の行をコピー
+
+    # コメント行以外のデータを文字列形式に変換して追加
+    gtf_data_lines = updated_gtf_df.to_csv(sep='\t', header=False, index=False, quoting=csv.QUOTE_NONE).splitlines()
+    for i, line in enumerate(output_lines):
+        if not line.startswith('#'):
+            # コメント行以外の部分を置き換え
+            output_lines[i:] = gtf_data_lines
             break
 
-    # 保存
-    updated_gtf_df.to_csv(output_file, sep='\t', header=False, index=False, quoting=csv.QUOTE_NONE)
+    # 保存処理
+    with open(output_file, 'w') as f:
+        f.write('\n'.join(output_lines) + '\n')
 
 if __name__ == "__main__":
     # コマンドライン引数の設定
