@@ -204,7 +204,7 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
             break
 
     # 空行を削除
-    output_lines = [line for line in output_lines if line.strip()]
+    output_lines = [line.strip() for line in output_lines if line.strip()]
 
     # 保存処理
     with open(output_file, 'w') as f:
