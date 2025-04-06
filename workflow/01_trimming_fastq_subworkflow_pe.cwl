@@ -1,7 +1,7 @@
 #!/usr/bin/env cwl-runner
 cwlVersion: v1.2
 class: Workflow
-label: "trimming fastq files"
+label: "trimming fastq files (paired-end)"
 doc: "multiple fastq files trimming process using fastp version 0.23.4 and scatter feature requirement"
 
 requirements:
@@ -35,8 +35,8 @@ inputs:
 
 steps:
     - id: trimming_fastp
-      run: ../Tools/02_trimming_fastp.cwl
-      scatter: [fastq1, fastq2] # Parameters in Tool/02_trimming_fastp.cwl should be listed here
+      run: ../Tools/02_trimming_fastp_pe.cwl
+      scatter: [fastq1, fastq2] # Parameters in Tool/02_trimming_fastp_pe.cwl should be listed here
       scatterMethod: dotproduct
       in:
         fastq1: fastq1_files
@@ -88,10 +88,6 @@ outputs:
       doc: "stderr log files"
       outputSource: trimming_fastp/stderr_log
 
-hints:
-  - class: DockerRequirement
-    dockerPull: quay.io/biocontainers/fastp:0.23.4--h125f33a_4
-
 $namespaces:
   s: https://schema.org/
-  edam: http://edamontology.org/
+  edam: https://edamontology.org/

@@ -36,9 +36,9 @@ inputs:
     default: 16
 
 steps:
-  - id: star_analysis
-    run: ../Tools/05_star4cageseq_analysis.cwl
-    scatter: [cage_seq_read_1, cage_seq_read_2] # Parameters in Tool/05_star4cageseq_analysis.cwl should be listed here
+  - id: star_analysis_pe
+    run: ../Tools/05_star4cageseq_analysis_pe.cwl
+    scatter: [cage_seq_read_1, cage_seq_read_2] # Parameters in Tool/05_star4cageseq_analysis_pe.cwl should be listed here
     scatterMethod: dotproduct
     in:
       star_index_dir: star_index_dir
@@ -53,55 +53,50 @@ outputs:
     label: "STAR aligned BAM files"
     doc: "STAR aligned BAM files"
     format: edam:format_2572
-    outputSource: star_analysis/aligned_bam
+    outputSource: star_analysis_pe/aligned_bam
 
   - id: final_log_files
     type: File[]
     label: "STAR final log files"
     doc: "STAR final log files"
     format: edam:format_3671
-    outputSource: star_analysis/final_log
+    outputSource: star_analysis_pe/final_log
 
   - id: main_log_files
     type: File[]
     label: "STAR main log files"
     doc: "STAR main log files"
     format: edam:format_3671
-    outputSource: star_analysis/main_log
+    outputSource: star_analysis_pe/main_log
 
   - id: progress_log_files
     type: File[]
     label: "STAR progress log files"
     doc: "STAR progress log files"
     format: edam:format_3671
-    outputSource: star_analysis/progress_log
+    outputSource: star_analysis_pe/progress_log
 
   - id: sj_tab_files
     type: File[]
     label: "STAR splice junctions tab files"
     doc: "STAR splice junctions tab files"
     format: edam:format_3671
-    outputSource: star_analysis/sj_tab
+    outputSource: star_analysis_pe/sj_tab
 
   - id: log_stdout_files
     type: File[]
     label: "STAR stdout files"
     doc: "STAR stdout files"
     format: edam:format_3671
-    outputSource: star_analysis/log_stdout
+    outputSource: star_analysis_pe/log_stdout
 
   - id: log_stderr_files
     type: File[]
     label: "STAR stderr files"
     doc: "STAR stderr files"
     format: edam:format_3671
-    outputSource: star_analysis/log_stderr
-    
-hints:
-  - class: DockerRequirement
-    dockerPull: quay.io/biocontainers/fastp:0.23.4--h125f33a_4
+    outputSource: star_analysis_pe/log_stderr
 
 $namespaces:
   s: https://schema.org/
-  edam: http://edamontology.org/
-      
+  edam: https://edamontology.org/

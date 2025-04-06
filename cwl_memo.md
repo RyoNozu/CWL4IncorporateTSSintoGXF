@@ -1,12 +1,16 @@
-# CWLを書く手順
+# cwl-memo
 
-## 1. zatsu-cwl-generatorでざっくりCWLファイルを出力する
+## CWLを記述する手順
+
+- CWLを書く時に以下の流れで記載をしています
+
+### 1. zatsu-cwl-generatorでざっくりCWLファイルを出力する
 
 ```bash
 zatsu-cwl-generator "seqkit ./Data/Halichoeres_trimaculatus/Halichoeres_trimaculatus-hifiasm-3ddna-v1.1.edit.fna.gz -i -O ./seqs_by_scaffold" > ./Tools/01_split_genome_seqs.cwl
 ```
 
-## 2. 手動で修正，チェックする
+### 2. 手動で修正，チェックする
 
 - CWLの記法のバージョンを1.2にする
 - 以下のコマンドでvalidateして書き方に変なところがないか確認する
@@ -15,7 +19,7 @@ zatsu-cwl-generator "seqkit ./Data/Halichoeres_trimaculatus/Halichoeres_trimacul
 cwltool --validate ./Tools/01_split_genome_seqs.cwl 
 ```
 
-## 3. チェックが通ったら，ワークフローエンジンのcwltoolで実行する
+### 3. チェックが通ったら，ワークフローエンジンのcwltoolで実行する
 
 ```bash
 cwltool --debug --cachedir ./cwl_cache/ --outdir ./Data/ ./Tools/01_split_genome_seqs.cwl
@@ -27,7 +31,7 @@ cwltool --debug --cachedir ./cwl_cache/ --outdir ./Data/ ./Tools/01_split_genome
 
 &nbsp;
 
-## 2025/02/08 memo
+## 2025/02/08 memo by yonezawa
 
 - fastpのプロセスで複数ファイルの処理を行うCWLファイルを新たに作成
 - サブワークフローを作成して，複数ファイルの処理を行う
@@ -40,7 +44,7 @@ cwltool --debug --outdir ./out/ ./workflow/01_trimming_fastq_subworkflow.cwl ./c
 
 &nbsp;
 
-## 2025/02/09 memo
+## 2025/02/09 memo by yonezawa
 
 - STARでindexを作成するファイルを作成
 - reference genomeのfastaファイルをdecompressする処理とSTARでindexを作成する処理を分離
@@ -57,4 +61,78 @@ cwltool --debug --outdir ./out/ --cachedir ./cwl_cache/ ./Tools/04_make_star_ind
 
 ```bash
 cwltool --debug --outdir ./out/ --cachedir ./cwl_cache/ ./workflow/02_star4cageseq_analysis_subworkflow.cwl ./config/02_star4cageseq_analysis.yml
+```
+
+&nbsp;
+
+## 2025/03/13 memo by NZR
+
+オプション指定での実行でエラー
+
+```bash
+cwltool --debug --outdir ./out/ --cachedir ./cwl_cache/ ~/Google\ Drive/その他の 
+  ソコン/マイ\ MacBook\ Pro/Google_drive/Project_non-codingRegionAnnotation/CWL4gtf_update/CWL4gtf_update/Tools/04_make_star_index.cwl --reference_genome ./Data/Danio_rerio/GCF_000002035.6_GRCz11_genomic.fna --reference_genome_annotation ./Data/Danio_rerio/GCF_000002035.6_GRCz11_genomic.gtf
+```
+
+```DEBUG & ERROR message
+DEBUG Parsed job order from command line: {
+    "__id": "/Users/rnz/Google Drive/\u305d\u306e\u4ed6\u306e\u30d1\u30bd\u30b3\u30f3/\u30de\u30a4 MacBook Pro/Google_drive/Project_non-codingRegionAnnotation/CWL4gtf_update/CWL4gtf_update/Tools/04_make_star_index.cwl",
+    "output_dir_name": "star_genome_idx",
+    "reference_genome": {
+        "class": "File",
+        "location": "file:///Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/Data/Danio_rerio/GCF_000002035.6_GRCz11_genomic.fna"
+    },
+    "reference_genome_annotation": {
+        "class": "File",
+        "location": "file:///Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/Data/Danio_rerio/GCF_000002035.6_GRCz11_genomic.gtf"
+    },
+    "star_threads": 16
+}
+ERROR Workflow error:
+Expected value of 'reference_genome' to have format 'http://edamontology.org/format_1929' but
+ File has no 'format' defined: {
+    "class": "File",
+    "location": "file:///Volumes/externalSSD4M3Max/test_dir_4_update-gtf_cwl/Data/Danio_rerio/GCF_000002035.6_GRCz11_genomic.fna",
+    "size": 1700419557,
+    "basename": "GCF_000002035.6_GRCz11_genomic.fna",
+    "nameroot": "GCF_000002035.6_GRCz11_genomic",
+```
+
+&nbsp;
+
+## 2025/03/19 memo by yonezawa
+
+### Workflow 構築基本方針
+
+- single-end と pair-end に対応した処理を実行することに決定
+- パーツである `CommandLineTool`定義のファイルをそれぞれ SEとPEで作成
+- サブのパーツである `subworkflow` のファイルもそれぞれSE、PEで作成
+- (悩み中) すべてのプロセスを含む `workflow`定義のファイルに `when` 式を組み込むか、それともこちらもSEとPEのバージョンを両方作るか...
+
+&nbsp;
+
+## 2025/03/20 memo by yonezawa
+
+- `./Tools` ディレクトリにある `CommandLineTool`定義のファイル (ワークフローのパーツとなるもの) のうち、`fastp`と`STAR`の処理はそれぞれsingle-endに対応させた
+- `cwltool --validate` を実行して一応OKだったものの、まだ実際のファイルで実行していない
+- `./workflow`ディレクトリにある `subworkflow`という名前がついたファイルについてもsingle-endに対応させたものを使用
+- こちらについてもまだ実際のファイルで実行していない
+
+&nbsp;
+
+### `workflow`定義のファイルについて
+
+- 当初、`when`式を組み込んだワークフローのファイルを作成しようとかんがえていたが、以下のような懸念点がある
+    1. CWLではシンプルなワークフローを構築することを推奨している
+    2. この機能はすべてのワークフローエンジンには搭載されていないため、再現性、互換性に難あり
+    3. シンプルな条件分岐なのに対して、複雑な対応が迫られる
+
+- 以上の点からペアエンドとシングルエンドに対応したファイルをそれぞれ作成する
+- READMEとかには ペアエンド用はこれ、シングルエンド用はこれ、というふうな指示を書いておく 
+
+
+- seqkit -> STAR mapping までの処理 (paired-end) は一応成功
+
+```bash
+cwltool --debug --outdir ./test/ --cachedir ./cwl_cache/ ./workflow/cageseq_gtf_update_pe.cwl ./config/Workflow_config/cageseq_gtf_update_pe.yml
 ```
