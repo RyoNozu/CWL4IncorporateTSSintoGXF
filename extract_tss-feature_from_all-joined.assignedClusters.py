@@ -103,7 +103,7 @@
 import pandas as pd
 
 # 入力ファイルを読み込む
-input_file = "sort.all-joined.assignedClusters.tsv"
+input_file = "all-joined.assignedClusters.tsv"
 df = pd.read_csv(input_file, sep="\t", header=0)
 
 # 出力ファイルを開く
