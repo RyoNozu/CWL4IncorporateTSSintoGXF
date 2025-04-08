@@ -72,7 +72,7 @@ result_df.columns = ['seqname', 'source', 'feature', 'start', 'end', 'score', 's
 result_df = result_df[['tss_id', 'seqname', 'start', 'end', 'strand', 'end', 'source', 'feature', 'score', 'tags.dominant_tss', 'gene_id']]
 
 # 6列目のヘッダーを「tss_pos」に変更
-result_df.rename(columns={'end': 'tss_pos'}, inplace=True)
+result_df.columns = ['tss_id', 'seqname', 'start', 'end', 'strand', 'tss_pos', 'source', 'feature', 'score', 'tags.dominant_tss', 'gene_id']
 
 # 1列目の値でソート
 result_df = result_df.sort_values(by='tss_id')
