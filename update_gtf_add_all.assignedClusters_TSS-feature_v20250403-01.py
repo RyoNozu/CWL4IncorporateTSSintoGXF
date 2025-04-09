@@ -636,8 +636,6 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
         f.write('\n'.join(output_lines) + '\n')
 
     print("File saved successfully.")
-
-    print(gtf_df[['attribute']].head(50))
     print("Debug: Final GTF DataFrame preview:")
     print(final_gtf_df.head(50))  # 最初の10行を確認
 
