@@ -134,11 +134,8 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                         print(f"Updated transcript for transcript_id {transcript_id}:")
                         print(updated_transcript.iloc[0])
 
-                # 元の transcript 行を削除
-                gtf_df = gtf_df[~((gtf_df['feature'].isin(['transcript', 'mRNA'])) & (gtf_df['transcript_id'] == transcript_id))]
-
-                print("Debug: gtf_df after transcript/mRNA deletion:")
-                print(gtf_df[gtf_df['transcript_id'] == transcript_id])
+                        # 元の transcript 行を削除
+                        gtf_df = gtf_df[~((gtf_df['feature'].isin(['transcript', 'mRNA'])) & (gtf_df['transcript_id'] == transcript_id))]
 
                 # exon の更新処理
                 if not exons.empty:
@@ -150,15 +147,15 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                     print(f"Updated exon for transcript_id {transcript_id} (smallest start):")
                     print(smallest_start_exon)
 
+                    # 元の exon 行を削除
+                    gtf_df = gtf_df[~((gtf_df['feature'] == 'exon') & (gtf_df['transcript_id'] == transcript_id))]
+
                     # 他の exon をそのまま追加
                     other_exons = related_exons[related_exons.index != smallest_start_exon.name]
                     for idx, exon_row in other_exons.iterrows():
                         updated_gtf.append({**exon_row.to_dict(), 'original_index': idx})
                         ###print(f"Unmodified exon added for transcript_id {exon_row['attribute']}:")
                         ###print(exon_row)
-
-                # 元の exon 行を削除
-                gtf_df = gtf_df[~((gtf_df['feature'] == 'exon') & (gtf_df['transcript_id'] == transcript_id))]
 
                 # five_prime_UTR の計算と追加処理
                 # 最初の CDS を基準に five_prime_utr_end を計算
@@ -242,11 +239,8 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                         print(f"Updated transcript for transcript_id {transcript_id}:")
                         print(updated_transcript.iloc[0])
     
-                # 元の transcript 行を削除
-                gtf_df = gtf_df[~((gtf_df['feature'].isin(['transcript', 'mRNA'])) & (gtf_df['transcript_id'] == transcript_id))]
-
-                print("Debug: gtf_df after transcript/mRNA deletion:")
-                print(gtf_df[gtf_df['transcript_id'] == transcript_id])
+                        # 元の transcript 行を削除
+                        gtf_df = gtf_df[~((gtf_df['feature'].isin(['transcript', 'mRNA'])) & (gtf_df['transcript_id'] == transcript_id))]
 
                 # exon の更新処理
                 if not exons.empty:
@@ -258,16 +252,16 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                     print(f"Updated exon for transcript_id {transcript_id} (largest end):")
                     print(largest_end_exon)
 
+                    # 元の exon 行を削除
+                    gtf_df = gtf_df[~((gtf_df['feature'] == 'exon') & (gtf_df['transcript_id'] == transcript_id))]
+
                     # 他の exon をそのまま追加
                     other_exons = related_exons[related_exons.index != largest_end_exon.name]
                     for idx, exon_row in other_exons.iterrows():
                         updated_gtf.append({**exon_row.to_dict(), 'original_index': idx})
                         ###print(f"Unmodified exon added for transcript_id {exon_row['attribute']}:")
                         ###print(exon_row)
-    
-                # 元の exon 行を削除
-                gtf_df = gtf_df[~((gtf_df['feature'] == 'exon') & (gtf_df['transcript_id'] == transcript_id))]
-    
+        
                 # five_prime_UTR の計算と追加処理
                 # 最後の CDS を基準に five_prime_utr_start を計算
                 five_prime_utr_start = cds[cds['transcript_id'] == transcript_id]['end'].max() + 1
@@ -385,18 +379,15 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                             print(f"Updated transcript for transcript_id {transcript_id}:")
                             print(updated_transcript.iloc[0])
 
+                            # 元の transcript または mRNA 行を削除
+                            gtf_df = gtf_df[~((gtf_df['feature'].isin(['transcript', 'mRNA'])) & (gtf_df['transcript_id'] == transcript_id))]
+
                         # 選択されなかった transcript_id の行をそのまま追加
                         other_transcripts = transcripts[transcripts['transcript_id'] != transcript_id]
                         for idx, transcript_row in other_transcripts.iterrows():
                             updated_gtf.append({**transcript_row.to_dict(), 'original_index': idx})
                             ###print(f"Unmodified transcript added for transcript_id {transcript_row['transcript_id']}:")
                             ###print(transcript_row)
-
-                        # 元の transcript または mRNA 行を削除
-                        gtf_df = gtf_df[~((gtf_df['feature'].isin(['transcript', 'mRNA'])) & (gtf_df['transcript_id'] == transcript_id))]
-
-                    print("Debug: gtf_df after transcript/mRNA deletion:")
-                    print(gtf_df[gtf_df['transcript_id'] == transcript_id])
 
                     # exon の更新処理
                     if not exons.empty:
@@ -408,6 +399,9 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                         updated_gtf.append({**smallest_start_exon.to_dict(), 'original_index': smallest_start_exon.name})
                         print(f"Updated exon for transcript_id {transcript_id} (smallest start):")
                         print(smallest_start_exon)
+
+                        # 元の exon 行を削除
+                        gtf_df = gtf_df[~((gtf_df['feature'] == 'exon') & (gtf_df['transcript_id'] == transcript_id))]
 
                         # 他の exon をそのまま追加
                         other_exons = related_exons[related_exons.index != smallest_start_exon.name]
@@ -422,9 +416,6 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                             updated_gtf.append({**exon_row.to_dict(), 'original_index': idx})
                             ###print(f"Unmodified exon added for unselected transcript_id {exon_row['attribute']}:")
                             ###print(exon_row)
-
-                        # 元の exon 行を削除
-                        gtf_df = gtf_df[~((gtf_df['feature'] == 'exon') & (gtf_df['transcript_id'] == transcript_id))]
 
                     # five_prime_UTR の計算と追加処理    
                     # 最初の CDS を基準に five_prime_utr_end を計算
@@ -502,18 +493,16 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                             updated_gtf.append({**updated_transcript.iloc[0].to_dict(), 'original_index': updated_transcript.index[0]})
                             print(f"Updated transcript for transcript_id {transcript_id}:")
                             print(updated_transcript.iloc[0])
-        
+
+                            # 元の transcript または mRNA 行を削除
+                            gtf_df = gtf_df[~((gtf_df['feature'].isin(['transcript', 'mRNA'])) & (gtf_df['transcript_id'] == transcript_id))]
+
                         # 選択されなかった transcript_id の行をそのまま追加
                         other_transcripts = transcripts[transcripts['transcript_id'] != transcript_id]
                         for idx, transcript_row in other_transcripts.iterrows():
                             updated_gtf.append({**transcript_row.to_dict(), 'original_index': idx})
                             ###print(f"Unmodified transcript added for transcript_id {transcript_row['transcript_id']}:")
                             ###print(transcript_row)
-
-                        # 元の transcript または mRNA 行を削除
-                        gtf_df = gtf_df[~((gtf_df['feature'].isin(['transcript', 'mRNA'])) & (gtf_df['transcript_id'] == transcript_id))]
-                        print("Debug: gtf_df after transcript/mRNA deletion:")
-                        print(gtf_df[gtf_df['transcript_id'] == transcript_id])
 
                     # exon の更新処理を追加
                     if not exons.empty:
@@ -525,16 +514,16 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                         updated_gtf.append({**largest_end_exon.to_dict(), 'original_index': largest_end_exon.name})
                         print(f"Updated exon for transcript_id {transcript_id} (largest end):")
                         print(largest_end_exon)
-    
+
+                        # 元の exon 行を削除
+                        gtf_df = gtf_df[~((gtf_df['feature'] == 'exon') & (gtf_df['transcript_id'] == transcript_id))]
+
                         # 選択されなかった exon をそのまま追加
                         other_exons = exons[~exons['attribute'].str.contains(f'transcript_id={transcript_id}')]
                         for idx, exon_row in other_exons.iterrows():
                             updated_gtf.append({**exon_row.to_dict(), 'original_index': idx})
                             ###print(f"Unmodified exon added for transcript_id {exon_row['attribute']}:")
                             ###print(exon_row)
-
-                        # 元の exon 行を削除
-                        gtf_df = gtf_df[~((gtf_df['feature'] == 'exon') & (gtf_df['transcript_id'] == transcript_id))]
 
                     # five_prime_UTR の計算と追加処理    
                     # 最後の CDS を基準に five_prime_utr_start を計算
@@ -604,6 +593,8 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
         gtf_df = gtf_df[~((gtf_df['feature'] == 'gene') & (gtf_df['gene_id'] == gene_id))]
         # 元の transcript 行を削除
         gtf_df = gtf_df[~((gtf_df['feature'].isin(['transcript', 'mRNA'])) & (gtf_df['transcript_id'] == transcript_id))]
+        # 元の exon 行を削除
+        gtf_df = gtf_df[~((gtf_df['feature'] == 'exon') & (gtf_df['transcript_id'] == transcript_id))]
 
     # gene_group に含まれなかった行をそのまま追加
     for idx, row in unprocessed_rows.iterrows():
