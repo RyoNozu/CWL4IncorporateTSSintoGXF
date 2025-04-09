@@ -110,33 +110,36 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
             tss_pos = tss_group['tss_pos'].iloc[0]
             strand = gene.iloc[0]['strand']
 
-            # gene start または gene end の更新
+            # strandに基づいた処理
             if strand == '+':
+                # gene 行の更新
                 new_gene_start = int(tss_pos)
                 gene.iloc[0, gene.columns.get_loc('start')] = new_gene_start
                 print(f"Updated gene start for gene_id {gene_id} to {tss_pos}.")
-            else:
-                new_gene_end = int(tss_pos)
-                gene.iloc[0, gene.columns.get_loc('end')] = new_gene_end
-                print(f"Updated gene end for gene_id {gene_id} to {tss_pos}.")
 
-            # transcript の更新処理
-            if not transcripts.empty:
-                updated_transcript = transcripts[transcripts['transcript_id'] == transcript_id].copy()
-                if not updated_transcript.empty:
-                    if strand == '+':
+                # 更新された gene 行を updated_gtf に追加
+                updated_gene = gene.iloc[0].to_dict()
+                updated_gene['original_index'] = gene.index[0]
+                updated_gtf.append(updated_gene)
+
+                # 元の gene 行を削除
+                gtf_df = gtf_df[~((gtf_df['feature'] == 'gene') & (gtf_df['gene_id'] == gene_id))]
+
+                # transcript の更新処理
+                if not transcripts.empty:
+                    updated_transcript = transcripts[transcripts['transcript_id'] == transcript_id].copy()
+                    if not updated_transcript.empty:
                         updated_transcript.iloc[0, updated_transcript.columns.get_loc('start')] = int(tss_pos)
-                    else:
-                        updated_transcript.iloc[0, updated_transcript.columns.get_loc('end')] = int(tss_pos)
-                    updated_gtf.append({**updated_transcript.iloc[0].to_dict(), 'original_index': updated_transcript.index[0]})
-                    print(f"Updated transcript for transcript_id {transcript_id}:")
-                    print(updated_transcript.iloc[0])
+                        updated_gtf.append({**updated_transcript.iloc[0].to_dict(), 'original_index': updated_transcript.index[0]})
+                        print(f"Updated transcript for transcript_id {transcript_id}:")
+                        print(updated_transcript.iloc[0])
 
-            # exon の更新処理
-            if not exons.empty:
-                related_exons = exons[exons['attribute'].str.contains(f'transcript_id={transcript_id}')]
+                # 元の transcript 行を削除
+                gtf_df = gtf_df[~((gtf_df['feature'].isin(['transcript', 'mRNA'])) & (gtf_df['transcript_id'] == transcript_id))]
 
-                if strand == '+':
+                # exon の更新処理
+                if not exons.empty:
+                    related_exons = exons[exons['attribute'].str.contains(f'transcript_id={transcript_id}')]
                     # start が最小の exon を取得
                     smallest_start_exon = related_exons.loc[related_exons['start'].idxmin()].copy()
                     smallest_start_exon['start'] = int(tss_pos)  # TSS に基づいて start を更新
@@ -148,10 +151,100 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                     other_exons = related_exons[related_exons.index != smallest_start_exon.name]
                     for idx, exon_row in other_exons.iterrows():
                         updated_gtf.append({**exon_row.to_dict(), 'original_index': idx})
-                        print(f"Unmodified exon added for transcript_id {exon_row['attribute']}:")
-                        print(exon_row)
+                        ###print(f"Unmodified exon added for transcript_id {exon_row['attribute']}:")
+                        ###print(exon_row)
 
+                # 元の exon 行を削除
+                gtf_df = gtf_df[~((gtf_df['feature'] == 'exon') & (gtf_df['transcript_id'] == transcript_id))]
+
+                # five_prime_UTR の計算と追加処理
+                # 最初の CDS を基準に five_prime_utr_end を計算
+                five_prime_utr_start = tss_pos
+                five_prime_utr_end = cds[cds['transcript_id'] == transcript_id]['start'].min() - 1
+
+                # five_prime_UTR_start と five_prime_UTR_end の範囲が正しい場合のみ追加
+                if five_prime_utr_start <= five_prime_utr_end:
+                    if file_type == "gtf":
+                        five_prime_utr_attribute = (
+                            f'gene_id "{gene.iloc[0]["gene_id"]}"; '
+                            f'Parent "rna-{transcript_id}"; '
+                            f'five_prime_utr_id "tss_id-{tss_group.iloc[0]["tss_id"]}"; '
+                            f'transcript_id "{transcript_id}"'
+                        )
+                    elif file_type == "gff":
+                        five_prime_utr_attribute = (
+                            f'ID=five_prime_utr-tss_id-{tss_group.iloc[0]["tss_id"]};'
+                            f'gene_id={gene.iloc[0]["gene_id"]};'
+                            f'Parent=rna-{transcript_id};'
+                            f'transcript_id={transcript_id}'
+                        )
+                    else:
+                        raise ValueError("Unsupported file type. Only GTF and GFF are supported.")
+            
+                    # 5'UTR行を作成
+                    five_prime_utr = pd.DataFrame({
+                        'seqname': [gene.iloc[0]['seqname']],
+                        'source': ['.'],
+                        'feature': ['five_prime_UTR'],
+                        'start': [int(five_prime_utr_start)],
+                        'end': [int(five_prime_utr_end)],
+                        'score': ['.'],
+                        'strand': [strand],
+                        'frame': ['.'],
+                        'attribute': [five_prime_utr_attribute]
+                    })
+            
+                    # 対応する transcript_id の最後の CDS 行のインデックスを取得
+                    last_cds_index = cds[cds['transcript_id'] == transcript_id].index.max()
+            
+                    # five_prime_UTR行をリストに追加
+                    five_prime_utr_dict = {**five_prime_utr.iloc[0].to_dict(), 'original_index': last_cds_index}
+                    updated_gtf.append(five_prime_utr_dict)
+            
+                    # デバッグ: five_prime_UTR の情報を確認
+                    print("Added five_prime_UTR entry:")
+                    print(five_prime_utr_dict)
                 else:
+                    print(f"Invalid UTR range for transcript_id: {transcript_id}. Skipping.")
+
+                # CDS の行をそのまま追加
+                for idx, cds_row in cds.iterrows():
+                    updated_gtf.append({**cds_row.to_dict(), 'original_index': idx})
+                # 他の要素をそのまま追加
+                for idx, other_row in other_features.iterrows():
+                    # 10列目以降を削除
+                    other_row = other_row.iloc[:10]
+                    updated_gtf.append({**other_row.to_dict(), 'original_index': idx})
+
+            # strand: '-' の処理
+            else:
+                new_gene_end = int(tss_pos)
+                gene.iloc[0, gene.columns.get_loc('end')] = new_gene_end
+                print(f"Updated gene end for gene_id {gene_id} to {tss_pos}.")
+
+                # 更新された gene 行を updated_gtf に追加
+                updated_gene = gene.iloc[0].to_dict()
+                updated_gene['original_index'] = gene.index[0]
+                updated_gtf.append(updated_gene)
+
+                # 元の gene 行を削除
+                gtf_df = gtf_df[~((gtf_df['feature'] == 'gene') & (gtf_df['gene_id'] == gene_id))]
+    
+                # transcript の更新処理
+                if not transcripts.empty:
+                    updated_transcript = transcripts[transcripts['transcript_id'] == transcript_id].copy()
+                    if not updated_transcript.empty:
+                        updated_transcript.iloc[0, updated_transcript.columns.get_loc('end')] = int(tss_pos)
+                        updated_gtf.append({**updated_transcript.iloc[0].to_dict(), 'original_index': updated_transcript.index[0]})
+                        print(f"Updated transcript for transcript_id {transcript_id}:")
+                        print(updated_transcript.iloc[0])
+    
+                # 元の transcript 行を削除
+                gtf_df = gtf_df[~((gtf_df['feature'].isin(['transcript', 'mRNA'])) & (gtf_df['transcript_id'] == transcript_id))]
+    
+                # exon の更新処理
+                if not exons.empty:
+                    related_exons = exons[exons['attribute'].str.contains(f'transcript_id={transcript_id}')]
                     # end が最大の exon を取得
                     largest_end_exon = related_exons.loc[related_exons['end'].idxmax()].copy()
                     largest_end_exon['end'] = int(tss_pos)  # TSS に基づいて end を更新
@@ -163,9 +256,74 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                     other_exons = related_exons[related_exons.index != largest_end_exon.name]
                     for idx, exon_row in other_exons.iterrows():
                         updated_gtf.append({**exon_row.to_dict(), 'original_index': idx})
-                        print(f"Unmodified exon added for transcript_id {exon_row['attribute']}:")
-                        print(exon_row)
+                        ###print(f"Unmodified exon added for transcript_id {exon_row['attribute']}:")
+                        ###print(exon_row)
+    
+                # 元の exon 行を削除
+                gtf_df = gtf_df[~((gtf_df['feature'] == 'exon') & (gtf_df['transcript_id'] == transcript_id))]
+    
+                # five_prime_UTR の計算と追加処理
+                # 最後の CDS を基準に five_prime_utr_start を計算
+                five_prime_utr_start = cds[cds['transcript_id'] == transcript_id]['end'].max() + 1
+                five_prime_utr_end = tss_pos
+            
+                # five_prime_UTR_start と five_prime_UTR_end の範囲が正しい場合のみ追加
+                if five_prime_utr_start <= five_prime_utr_end:
+                    if file_type == "gtf":
+                        five_prime_utr_attribute = (
+                            f'gene_id "{gene.iloc[0]["gene_id"]}"; '
+                            f'Parent "rna-{transcript_id}"; '
+                            f'five_prime_utr_id "tss_id-{tss_group.iloc[0]["tss_id"]}"; '
+                            f'transcript_id "{transcript_id}"'
+                        )
+                    elif file_type == "gff":
+                        five_prime_utr_attribute = (
+                            f'ID=five_prime_utr-tss_id-{tss_group.iloc[0]["tss_id"]};'
+                            f'gene_id={gene.iloc[0]["gene_id"]};'
+                            f'Parent=rna-{transcript_id};'
+                            f'transcript_id={transcript_id}'
+                        )
+                    else:
+                        raise ValueError("Unsupported file type. Only GTF and GFF are supported.")
+            
+                    # 5'UTR行を作成
+                    five_prime_utr = pd.DataFrame({
+                        'seqname': [gene.iloc[0]['seqname']],
+                        'source': ['.'],
+                        'feature': ['five_prime_UTR'],
+                        'start': [int(five_prime_utr_start)],
+                        'end': [int(five_prime_utr_end)],
+                        'score': ['.'],
+                        'strand': [strand],
+                        'frame': ['.'],
+                        'attribute': [five_prime_utr_attribute]
+                    })
+            
+                    # 対応する transcript_id の最後の CDS 行のインデックスを取得
+                    last_cds_index = cds[cds['transcript_id'] == transcript_id].index.max()
+            
+                    # five_prime_UTR行をリストに追加
+                    five_prime_utr_dict = {**five_prime_utr.iloc[0].to_dict(), 'original_index': last_cds_index}
+                    updated_gtf.append(five_prime_utr_dict)
+            
+                    # デバッグ: five_prime_UTR の情報を確認
+                    print("Added five_prime_UTR entry:")
+                    print(five_prime_utr_dict)
+                else:
+                    print(f"Invalid UTR range for transcript_id: {transcript_id}. Skipping.")
+    
+                updated_gtf.append({**gene.iloc[0].to_dict(), 'original_index': gene.index[0]})
+    
+                # CDS の行をそのまま追加
+                for idx, cds_row in cds.iterrows():
+                    updated_gtf.append({**cds_row.to_dict(), 'original_index': idx})
+                # 他の要素をそのまま追加
+                for idx, other_row in other_features.iterrows():
+                    # 10列目以降を削除
+                    other_row = other_row.iloc[:10]
+                    updated_gtf.append({**other_row.to_dict(), 'original_index': idx})
 
+        # 複数のtranscript_idを持つ場合の処理
         else:
             # 複数のtranscript_idを持つ場合、TSSに最も近いtranscript_idを選択
             print(f"Gene ID {gene_id} has multiple transcript_ids: {transcript_ids}")
@@ -178,274 +336,275 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                 if transcript_cds.empty:
                     continue
                 if gene.iloc[0]['strand'] == '+':
-                    five_utr_end = transcript_cds['start'].min()  # 修正: transcript_start → five_utr_end
+                    five_utr_end = transcript_cds['start'].min()
                 else:
-                    five_utr_end = transcript_cds['end'].max()  # 修正: transcript_start → five_utr_end
-                tss_to_cds_distance[transcript_id] = abs(five_utr_end - tss_pos)  # 修正: transcript_distances → tss_to_cds_distance
+                    five_utr_end = transcript_cds['end'].max()
+                tss_to_cds_distance[transcript_id] = abs(five_utr_end - tss_pos)
 
-            # 最も近い transcript_id を選択
-            transcript_id = min(tss_to_cds_distance, key=tss_to_cds_distance.get)
-            print(f"Selected transcript_id for gene_id {gene_id}: {transcript_id}")
+            # 最小値を取得
+            min_distance = min(tss_to_cds_distance.values())
 
-        # 選ばれた transcript_id の情報を取得
-        transcript_cds = cds[cds['transcript_id'] == transcript_id]
-        transcript_start = transcripts['start'].min() if not transcripts.empty else None
+            # 最小値を持つすべての transcript_id を取得
+            closest_transcripts = [tid for tid, distance in tss_to_cds_distance.items() if distance == min_distance]
 
-        # 以下、選択されたtranscript_idを用いて処理を実行
-        strand = gene.iloc[0]['strand']
+            # デバッグ: 最小値を持つ transcript_id を確認
+            print(f"Closest transcripts for gene_id {gene_id}: {closest_transcripts}")
 
-        # gene の開始または終了位置を更新
-        if strand == '+':
-            # TSSに最も近いtranscriptのstartを取得
-            tss_pos = tss_group['tss_pos'].iloc[0]
+            # 最小値を持つすべての transcript_id に対して処理を実行
+            for transcript_id in closest_transcripts:
+                print(f"Processing transcript_id {transcript_id} for gene_id {gene_id}")
 
-            # 各transcriptの開始位置とTSSの距離を計算
-            transcript_distances = {}
-            for idx, transcript_row in transcripts.iterrows():
-                transcript_start = transcript_row['start']
-                transcript_distances[transcript_start] = abs(transcript_start - tss_pos)
+                # 選ばれた transcript_id の情報を取得
+                transcript_cds = cds[cds['transcript_id'] == transcript_id]
 
-            # デバッグ: transcript_distances を確認
-            print(f"Debug: transcript_distances for gene_id {gene_id}: {transcript_distances}")
+                # 以下、選択された transcript_id を用いて処理を実行
+                strand = gene.iloc[0]['strand']
 
-            # TSSに最も近いtranscriptのstartを取得
-            closest_transcript_start = min(transcript_distances, key=transcript_distances.get)
+                # 選択された transcript_id の start を取得
+                transcript_start = transcripts[transcripts['transcript_id'] == transcript_id]['start'].iloc[0]
 
-            # gene の開始位置を更新
-            print(f"Debug: closest_transcript_start = {closest_transcript_start}, gene_start = {gene.iloc[0]['start']}")
-            if closest_transcript_start == gene.iloc[0]['start']:
-                new_gene_start = int(tss_pos)
-                gene.iloc[0, gene.columns.get_loc('start')] = new_gene_start
-                print(f"Updated gene start for gene_id {gene_id} to {tss_pos} (matched closest transcript start).")
-            else:
-                new_gene_start = gene.iloc[0]['start']
-                print(f"Gene start for gene_id {gene_id} not updated (closest transcript start does not match gene start).")
+                # gene の開始または終了位置を更新
+                if strand == '+':
+                    # transcript start が gene start と一致している場合のみ更新
+                    if transcript_start == gene.iloc[0]['start']:
+                        new_gene_start = int(tss_pos)
+                        gene.iloc[0, gene.columns.get_loc('start')] = new_gene_start
+                        print(f"Updated gene start for gene_id {gene_id} to {tss_pos} (matched transcript start).")
+                    else:
+                        print(f"Gene start for gene_id {gene_id} not updated (transcript start does not match gene start).")
+
+                    # transcript の更新処理
+                    if not transcripts.empty:
+                        updated_transcript = transcripts[transcripts['transcript_id'] == transcript_id].copy()
+                        if not updated_transcript.empty:
+                            updated_transcript.iloc[0, updated_transcript.columns.get_loc('start')] = int(tss_pos)
+                            updated_gtf.append({**updated_transcript.iloc[0].to_dict(), 'original_index': updated_transcript.index[0]})
+                            print(f"Updated transcript for transcript_id {transcript_id}:")
+                            print(updated_transcript.iloc[0])
+
+                        # 元の transcript または mRNA 行を削除
+                        gtf_df = gtf_df[~((gtf_df['feature'].isin(['transcript', 'mRNA'])) & (gtf_df['transcript_id'] == transcript_id))]
+
+                        # 選択されなかった transcript_id の行をそのまま追加
+                        other_transcripts = transcripts[transcripts['transcript_id'] != transcript_id]
+                        for idx, transcript_row in other_transcripts.iterrows():
+                            updated_gtf.append({**transcript_row.to_dict(), 'original_index': idx})
+                            ###print(f"Unmodified transcript added for transcript_id {transcript_row['transcript_id']}:")
+                            ###print(transcript_row)
+
+                    # exon の更新処理
+                    if not exons.empty:
+                        related_exons = exons[exons['attribute'].str.contains(f'transcript_id={transcript_id}')]
+    
+                        # start が最小の exon を取得
+                        smallest_start_exon = related_exons.loc[related_exons['start'].idxmin()].copy()
+                        smallest_start_exon['start'] = int(tss_pos)  # TSS に基づいて start を更新
+                        updated_gtf.append({**smallest_start_exon.to_dict(), 'original_index': smallest_start_exon.name})
+                        print(f"Updated exon for transcript_id {transcript_id} (smallest start):")
+                        print(smallest_start_exon)
+
+                        # 他の exon をそのまま追加
+                        other_exons = related_exons[related_exons.index != smallest_start_exon.name]
+                        for idx, exon_row in other_exons.iterrows():
+                            updated_gtf.append({**exon_row.to_dict(), 'original_index': idx})
+                            ###print(f"Unmodified exon added for transcript_id {exon_row['attribute']}:")
+                            ###print(exon_row)
+
+                        # 選ばれなかった transcript_id を持つ exon をそのまま追加
+                        unselected_exons = exons[~exons['attribute'].str.contains(f'transcript_id={transcript_id}')]
+                        for idx, exon_row in unselected_exons.iterrows():
+                            updated_gtf.append({**exon_row.to_dict(), 'original_index': idx})
+                            ###print(f"Unmodified exon added for unselected transcript_id {exon_row['attribute']}:")
+                            ###print(exon_row)
+
+                    # five_prime_UTR の計算と追加処理    
+                    # 最初の CDS を基準に five_prime_utr_end を計算
+                    five_prime_utr_start = tss_pos  # 修正: new_gene_start → tss_pos
+                    five_prime_utr_end = transcript_cds['start'].min() - 1
             
-            # transcript の更新処理を追加
-            if not transcripts.empty:
-                updated_transcript = transcripts[transcripts['transcript_id'] == transcript_id].copy()
-                if not updated_transcript.empty:
-                    if strand == '+':
-                        updated_transcript.iloc[0, updated_transcript.columns.get_loc('start')] = int(tss_pos)
+                    # five_prime_UTR_start と five_prime_UTR_end の範囲が正しい場合のみ追加
+                    if five_prime_utr_start <= five_prime_utr_end:
+                        # GTF形式かGFF形式かで処理を分岐
+                        if file_type == "gtf":
+                            # GTF形式: ダブルクォーテーションを付ける
+                            five_prime_utr_attribute = (
+                                f'gene_id "{gene.iloc[0]["gene_id"]}"; '  # ダブルクォーテーション付き
+                                f'Parent "rna-{transcript_id}"; '  # ダブルクォーテーション付き
+                                f'five_prime_utr_id "tss_id-{tss_group.iloc[0]["tss_id"]}"; '  # ID=を追加
+                                f'transcript_id "{transcript_id}"'  # ダブルクォーテーション付き
+                            )
+                        elif file_type == "gff":
+                            # GFF形式: ダブルクォーテーションを付けない
+                            five_prime_utr_attribute = (
+                                f'ID=five_prime_utr-tss_id-{tss_group.iloc[0]["tss_id"]};'  # ID=を追加
+                                f'gene_id={gene.iloc[0]["gene_id"]};'  # ダブルクォーテーションなし
+                                f'Parent=rna-{transcript_id};'  # ダブルクォーテーションなし
+                                f'transcript_id={transcript_id}'  # ダブルクォーテーションなし
+                            )
+                        else:
+                            raise ValueError("Unsupported file type. Only GTF and GFF are supported.")
+            
+                        # 5'UTR行を作成
+                        five_prime_utr = pd.DataFrame({
+                            'seqname': [gene.iloc[0]['seqname']],
+                            'source': ['.'],
+                            'feature': ['five_prime_UTR'],
+                            'start': [int(five_prime_utr_start)],
+                            'end': [int(five_prime_utr_end)],
+                            'score': ['.'],
+                            'strand': [strand],
+                            'frame': ['.'],
+                            'attribute': [five_prime_utr_attribute]
+                        })
+            
+                        # 対応する transcript_id の最後の CDS 行のインデックスを取得
+                        last_cds_index = cds[cds['transcript_id'] == transcript_id].index.max()
+            
+                        # five_prime_UTR行をリストに追加
+                        five_prime_utr_dict = {**five_prime_utr.iloc[0].to_dict(), 'original_index': last_cds_index}
+                        updated_gtf.append(five_prime_utr_dict)
+            
+                        # デバッグ: five_prime_UTR の情報を確認
+                        print("Added five_prime_UTR entry:")
+                        print(five_prime_utr_dict)
                     else:
-                        updated_transcript.iloc[0, updated_transcript.columns.get_loc('end')] = int(tss_pos)
-                    updated_gtf.append({**updated_transcript.iloc[0].to_dict(), 'original_index': updated_transcript.index[0]})
-                    print(f"Updated transcript for transcript_id {transcript_id}:")
-                    print(updated_transcript.iloc[0])
+                        print(f"Invalid UTR range for transcript_id: {transcript_id}. Skipping.")
 
-                # 選択されなかった transcript_id の行をそのまま追加
-                other_transcripts = transcripts[transcripts['transcript_id'] != transcript_id]
-                for idx, transcript_row in other_transcripts.iterrows():
-                    updated_gtf.append({**transcript_row.to_dict(), 'original_index': idx})
-                    print(f"Unmodified transcript added for transcript_id {transcript_row['transcript_id']}:")
-                    print(transcript_row)
-
-            # exon の更新処理を追加
-            if not exons.empty:
-                # 選択された transcript_id に関連する exon を取得
-                related_exons = exons[exons['attribute'].str.contains(f'transcript_id={transcript_id}')]
-
-                if strand == '+':
-                    # start が最小の exon を取得
-                    smallest_start_exon = related_exons.loc[related_exons['start'].idxmin()].copy()
-                    smallest_start_exon['start'] = int(tss_pos)  # TSS に基づいて start を更新
-                    updated_gtf.append({**smallest_start_exon.to_dict(), 'original_index': smallest_start_exon.name})
-                    print(f"Updated exon for transcript_id {transcript_id} (smallest start):")
-                    print(smallest_start_exon)
-
-                    # 他の exon をそのまま追加
-                    other_exons = related_exons[related_exons.index != smallest_start_exon.name]
-                    for idx, exon_row in other_exons.iterrows():
-                        updated_gtf.append({**exon_row.to_dict(), 'original_index': idx})
-                        print(f"Unmodified exon added for transcript_id {exon_row['attribute']}:")
-                        print(exon_row)
-
+                # strand == '-' の場合の処理
                 else:
-                    # strand が '-' の場合、end が最大の exon を取得
-                    largest_end_exon = related_exons.loc[related_exons['end'].idxmax()].copy()
-                    largest_end_exon['end'] = int(tss_pos)  # TSS に基づいて end を更新
-
-                    # 更新された exon を追加
-                    updated_gtf.append({**largest_end_exon.to_dict(), 'original_index': largest_end_exon.name})
-                    print(f"Updated exon for transcript_id {transcript_id} (largest end):")
-                    print(largest_end_exon)
-
-                    # 他の exon をそのまま追加
-                    other_exons = related_exons[related_exons.index != largest_end_exon.name]
-                    for idx, exon_row in other_exons.iterrows():
-                        updated_gtf.append({**exon_row.to_dict(), 'original_index': idx})
-                        print(f"Unmodified exon added for transcript_id {exon_row['attribute']}:")
-                        print(exon_row)
-
-        else:
-            # TSSに最も近いtranscriptのendを取得
-            transcript_end = transcript_cds['end'].max()  
-            tss_pos = tss_group['tss_pos'].iloc[0]
-
-            # TSSに最も近いtranscriptのendがgene_endと一致する場合のみgene_endを更新
-            if  transcript_end == gene.iloc[0]['end']:  
-                new_gene_end = int(tss_pos)  # 更新されたgene_endをnew_gene_endに設定
-                gene.iloc[0, gene.columns.get_loc('end')] = new_gene_end
-                print(f"Updated gene end for gene_id {gene_id} to {tss_pos} (matched transcript end).")
-            else:
-                new_gene_end = gene.iloc[0]['end']  # 元のgene_endを使用
-                print(f"Gene end for gene_id {gene_id} not updated (transcript end does not match gene end).")
-
-            # transcript の更新処理を追加
-            if not transcripts.empty:
-                updated_transcript = transcripts[transcripts['transcript_id'] == transcript_id].copy()
-                if not updated_transcript.empty:
-                    if strand == '+':
-                        updated_transcript.iloc[0, updated_transcript.columns.get_loc('start')] = int(new_gene_start)
+                    # TSSに最も近いtranscriptのendを取得
+                    transcript_end = transcript_cds['end'].max()  
+                    tss_pos = tss_group['tss_pos'].iloc[0]
+        
+                    # TSSに最も近いtranscriptのendがgene_endと一致する場合のみgene_endを更新
+                    if  transcript_end == gene.iloc[0]['end']:  
+                        new_gene_end = int(tss_pos)  # 更新されたgene_endをnew_gene_endに設定
+                        gene.iloc[0, gene.columns.get_loc('end')] = new_gene_end
+                        print(f"Updated gene end for gene_id {gene_id} to {tss_pos} (matched transcript end).")
                     else:
-                        updated_transcript.iloc[0, updated_transcript.columns.get_loc('end')] = int(new_gene_end)
-                    updated_gtf.append({**updated_transcript.iloc[0].to_dict(), 'original_index': updated_transcript.index[0]})
-                    print(f"Updated transcript for transcript_id {transcript_id}:")
-                    print(updated_transcript.iloc[0])
+                        new_gene_end = gene.iloc[0]['end']  # 元のgene_endを使用
+                        print(f"Gene end for gene_id {gene_id} not updated (transcript end does not match gene end).")
+        
+                    # transcript の更新処理を追加
+                    if not transcripts.empty:
+                        updated_transcript = transcripts[transcripts['transcript_id'] == transcript_id].copy()
+                        if not updated_transcript.empty:
+                            updated_transcript.iloc[0, updated_transcript.columns.get_loc('end')] = int(new_gene_end)
+                            updated_gtf.append({**updated_transcript.iloc[0].to_dict(), 'original_index': updated_transcript.index[0]})
+                            print(f"Updated transcript for transcript_id {transcript_id}:")
+                            print(updated_transcript.iloc[0])
+        
+                        # 選択されなかった transcript_id の行をそのまま追加
+                        other_transcripts = transcripts[transcripts['transcript_id'] != transcript_id]
+                        for idx, transcript_row in other_transcripts.iterrows():
+                            updated_gtf.append({**transcript_row.to_dict(), 'original_index': idx})
+                            ###print(f"Unmodified transcript added for transcript_id {transcript_row['transcript_id']}:")
+                            ###print(transcript_row)
+        
+                    # exon の更新処理を追加
+                    if not exons.empty:
+                        # 選択された transcript_id に関連する exon を取得
+                        related_exons = exons[exons['attribute'].str.contains(f'transcript_id={transcript_id}')]
+                        # 更新された exon を追加
+                        largest_end_exon = related_exons.loc[related_exons['end'].idxmax()].copy()
+                        largest_end_exon['end'] = int(tss_pos)  # TSS に基づいて end を更新
+                        updated_gtf.append({**largest_end_exon.to_dict(), 'original_index': largest_end_exon.name})
+                        print(f"Updated exon for transcript_id {transcript_id} (largest end):")
+                        print(largest_end_exon)
+    
+                        # 選択されなかった exon をそのまま追加
+                        other_exons = exons[~exons['attribute'].str.contains(f'transcript_id={transcript_id}')]
+                        for idx, exon_row in other_exons.iterrows():
+                            updated_gtf.append({**exon_row.to_dict(), 'original_index': idx})
+                            ###print(f"Unmodified exon added for transcript_id {exon_row['attribute']}:")
+                            ###print(exon_row)
 
-                # 選択されなかった transcript_id の行をそのまま追加
-                other_transcripts = transcripts[transcripts['transcript_id'] != transcript_id]
-                for idx, transcript_row in other_transcripts.iterrows():
-                    updated_gtf.append({**transcript_row.to_dict(), 'original_index': idx})
-                    print(f"Unmodified transcript added for transcript_id {transcript_row['transcript_id']}:")
-                    print(transcript_row)
-
-            # exon の更新処理を追加
-            if not exons.empty:
-                # 選択された transcript_id に関連する exon を取得
-                related_exons = exons[exons['attribute'].str.contains(f'transcript_id={transcript_id}')]
-
-                for idx, exon_row in related_exons.iterrows():
-                    updated_exon = exon_row.copy()
-                    if strand == '+':
-                        updated_exon['start'] = int(tss_pos)  # TSS に基づいて start を更新
+                    # five_prime_UTR の計算と追加処理    
+                    # 最後の CDS を基準に five_prime_utr_start を計算
+                    five_prime_utr_start = transcript_cds['end'].max() + 1 
+                    five_prime_utr_end = tss_pos  # 修正: new_gene_end → tss_pos
+            
+                    # five_prime_UTR_start と five_prime_UTR_end の範囲が正しい場合のみ追加
+                    if five_prime_utr_start <= five_prime_utr_end:
+                        # GTF形式かGFF形式かで処理を分岐
+                        if file_type == "gtf":
+                            # GTF形式: ダブルクォーテーションを付ける
+                            five_prime_utr_attribute = (
+                                f'gene_id "{gene.iloc[0]["gene_id"]}"; '  # ダブルクォーテーション付き
+                                f'Parent "rna-{transcript_id}"; '  # ダブルクォーテーション付き
+                                f'five_prime_utr_id "tss_id-{tss_group.iloc[0]["tss_id"]}"; '  # ID=を追加
+                                f'transcript_id "{transcript_id}"'  # ダブルクォーテーション付き
+                            )
+                        elif file_type == "gff":
+                            # GFF形式: ダブルクォーテーションを付けない
+                            five_prime_utr_attribute = (
+                                f'ID=five_prime_utr-tss_id-{tss_group.iloc[0]["tss_id"]};'  # ID=を追加
+                                f'gene_id={gene.iloc[0]["gene_id"]};'  # ダブルクォーテーションなし
+                                f'Parent=rna-{transcript_id};'  # ダブルクォーテーションなし
+                                f'transcript_id={transcript_id}'  # ダブルクォーテーションなし
+                            )
+                        else:
+                            raise ValueError("Unsupported file type. Only GTF and GFF are supported.")
+            
+                        # 5'UTR行を作成
+                        five_prime_utr = pd.DataFrame({
+                            'seqname': [gene.iloc[0]['seqname']],
+                            'source': ['.'],
+                            'feature': ['five_prime_UTR'],
+                            'start': [int(five_prime_utr_start)],
+                            'end': [int(five_prime_utr_end)],
+                            'score': ['.'],
+                            'strand': [strand],
+                            'frame': ['.'],
+                            'attribute': [five_prime_utr_attribute]
+                        })
+            
+                        # 対応する transcript_id の最後の CDS 行のインデックスを取得
+                        last_cds_index = cds[cds['transcript_id'] == transcript_id].index.max()
+            
+                        # five_prime_UTR行をリストに追加
+                        five_prime_utr_dict = {**five_prime_utr.iloc[0].to_dict(), 'original_index': last_cds_index}
+                        updated_gtf.append(five_prime_utr_dict)
+            
+                        # デバッグ: five_prime_UTR の情報を確認
+                        print("Added five_prime_UTR entry:")
+                        print(five_prime_utr_dict)
                     else:
-                        updated_exon['end'] = int(tss_pos)  # TSS に基づいて end を更新
+                        print(f"Invalid UTR range for transcript_id: {transcript_id}. Skipping.")
 
-                    # 更新された exon を追加
-                    updated_gtf.append({**updated_exon.to_dict(), 'original_index': idx})
-                    print(f"Updated exon for transcript_id {transcript_id}:")
-                    print(updated_exon)
+            updated_gtf.append({**gene.iloc[0].to_dict(), 'original_index': gene.index[0]})
 
-                # 選択されなかった exon をそのまま追加
-                other_exons = exons[~exons['attribute'].str.contains(f'transcript_id={transcript_id}')]
-                for idx, exon_row in other_exons.iterrows():
-                    updated_gtf.append({**exon_row.to_dict(), 'original_index': idx})
-                    print(f"Unmodified exon added for transcript_id {exon_row['attribute']}:")
-                    print(exon_row)
+            # CDS の行をそのまま追加
+            for idx, cds_row in cds.iterrows():
+                updated_gtf.append({**cds_row.to_dict(), 'original_index': idx})
+            # 他の要素をそのまま追加
+            for idx, other_row in other_features.iterrows():
+                # 10列目以降を削除
+                other_row = other_row.iloc[:10]
+                updated_gtf.append({**other_row.to_dict(), 'original_index': idx})
 
-        updated_gtf.append({**gene.iloc[0].to_dict(), 'original_index': gene.index[0]})
-
-        if strand == '+':
-            # 最初の CDS を基準に five_prime_utr_end を計算
-            five_prime_utr_start = tss_pos  # 修正: new_gene_start → tss_pos
-            five_prime_utr_end = transcript_cds['start'].min() - 1
-        else:
-            # 最後の CDS を基準に five_prime_utr_start を計算
-            five_prime_utr_start = transcript_cds['end'].max() + 1 
-            five_prime_utr_end = tss_pos  # 修正: new_gene_end → tss_pos
-
-        # five_prime_UTR_start と five_prime_UTR_end の範囲が正しい場合のみ追加
-        if five_prime_utr_start <= five_prime_utr_end:
-            # GTF形式かGFF形式かで処理を分岐
-            if file_type == "gtf":
-                # GTF形式: ダブルクォーテーションを付ける
-                five_prime_utr_attribute = (
-                    f'gene_id "{gene.iloc[0]["gene_id"]}"; '  # ダブルクォーテーション付き
-                    f'Parent "rna-{transcript_id}"; '  # ダブルクォーテーション付き
-                    f'five_prime_utr_id "tss_id-{tss_group.iloc[0]["tss_id"]}"; '  # ID=を追加
-                    f'transcript_id "{transcript_id}"'  # ダブルクォーテーション付き
-                )
-            elif file_type == "gff":
-                # GFF形式: ダブルクォーテーションを付けない
-                five_prime_utr_attribute = (
-                    f'ID=five_prime_utr-tss_id-{tss_group.iloc[0]["tss_id"]};'  # ID=を追加
-                    f'gene_id={gene.iloc[0]["gene_id"]};'  # ダブルクォーテーションなし
-                    f'Parent=rna-{transcript_id};'  # ダブルクォーテーションなし
-                    f'transcript_id={transcript_id}'  # ダブルクォーテーションなし
-                )
-            else:
-                raise ValueError("Unsupported file type. Only GTF and GFF are supported.")
-
-            # 5'UTR行を作成
-            five_prime_utr = pd.DataFrame({
-                'seqname': [gene.iloc[0]['seqname']],
-                'source': ['.'],
-                'feature': ['five_prime_UTR'],
-                'start': [int(five_prime_utr_start)],
-                'end': [int(five_prime_utr_end)],
-                'score': ['.'],
-                'strand': [strand],
-                'frame': ['.'],
-                'attribute': [five_prime_utr_attribute]
-            })
-
-            # 対応する transcript_id の最後の CDS 行のインデックスを取得
-            last_cds_index = cds[cds['transcript_id'] == transcript_id].index.max()
-
-            # five_prime_UTR行をリストに追加
-            five_prime_utr_dict = {**five_prime_utr.iloc[0].to_dict(), 'original_index': last_cds_index}
-            updated_gtf.append(five_prime_utr_dict)
-
-            # デバッグ: five_prime_UTR の情報を確認
-            print("Added five_prime_UTR entry:")
-            print(five_prime_utr_dict)
-        else:
-            print(f"Invalid UTR range for transcript_id: {transcript_id}. Skipping.")
-
-        # transcript の処理（存在する場合のみ）
-        if not transcripts.empty:
-            updated_transcript = transcripts[transcripts['transcript_id'] == transcript_id].copy()
-            if not updated_transcript.empty:  # 修正: () を削除
-                if strand == '+':
-                    updated_transcript.iloc[0, updated_transcript.columns.get_loc('start')] = int(tss_pos)
-                else:
-                    updated_transcript.iloc[0, updated_transcript.columns.get_loc('end')] = int(tss_pos)
-                
-                # デバッグ: 更新された transcript の内容を確認
-                print(f"Debug: Updated transcript for transcript_id {transcript_id}:")
-                print(updated_transcript.iloc[0])
-                
-                updated_gtf.append({**updated_transcript.iloc[0].to_dict(), 'original_index': updated_transcript.index[0]})
-                
-                # デバッグ: updated_gtf に追加された内容を確認
-                print(f"Debug: Updated GTF entry for transcript_id {transcript_id}:")
-                print(updated_gtf[-1])
-
-        # CDS の行をそのまま追加
-        for idx, cds_row in cds.iterrows():
-            updated_gtf.append({**cds_row.to_dict(), 'original_index': idx})
-
-        # 他の要素をそのまま追加
-        for idx, other_row in other_features.iterrows():
-            # 10列目以降を削除
-            other_row = other_row.iloc[:10]
-            updated_gtf.append({**other_row.to_dict(), 'original_index': idx})
+        # 元の gene 行を削除
+        gtf_df = gtf_df[~((gtf_df['feature'] == 'gene') & (gtf_df['gene_id'] == gene_id))]
+        # 元の transcript 行を削除
+        gtf_df = gtf_df[~((gtf_df['feature'].isin(['transcript', 'mRNA'])) & (gtf_df['transcript_id'] == transcript_id))]
 
     # gene_group に含まれなかった行をそのまま追加
     for idx, row in unprocessed_rows.iterrows():
         updated_gtf.append({**row.to_dict(), 'original_index': idx})
 
-    # デバッグ: updated_gtf に five_prime_UTR が含まれているか確認
-    print("Debug: Updated GTF entries (first 10):")
-    print(updated_gtf[:50])  # 最初の10行を確認
-
     # 最終的に DataFrame に変換
     updated_gtf_df = pd.DataFrame(updated_gtf)
-
-    # デバッグ: updated_gtf_df に five_prime_UTR が含まれているか確認
-    print("Debug: Updated GTF DataFrame preview:")
-    print(updated_gtf_df[updated_gtf_df['feature'] == 'five_prime_UTR'])
 
     # 重複を取り除く前にcDNA_match行を除外
     updated_gtf_only = updated_gtf_df.drop_duplicates()
 
-    # デバッグ: updated_gtf_only に five_prime_UTR が含まれているか確認
-    print("Debug: Updated GTF only (five_prime_UTR):")
-    print(updated_gtf_only[updated_gtf_only['feature'] == 'five_prime_UTR'])
-
     # 元の行の中で変更されなかった行を抽出
     unchanged_gtf = gtf_df[~gtf_df.index.isin(updated_gtf_only.index)]
+
+    # デバッグ: unchanged_gtf の内容を確認
+    print("Debug: Unchanged GTF rows:")
+    print(unchanged_gtf.head(50))  # 最初の50行を確認
+    print(f"Total unchanged rows: {len(unchanged_gtf)}")
 
     # アップデートされた行と変更されなかった行を結合
     final_gtf_df = pd.concat([updated_gtf_only, unchanged_gtf], ignore_index=True)
@@ -456,7 +615,7 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
 
     # コメント行を先頭に追加し、データ部分を結合する前にソート処理を実行
     # feature列のカスタム順序を設定
-    feature_order = ['region', 'gene', 'transcript', 'mRNA', 'exon', 'CDS', 
+    feature_order = ['region', 'gene', 'transcript', 'mRNA', 'lnc_RNA', 'exon', 'CDS', 
                      'five_prime_UTR', 'three_prime_UTR', 'start_codon', 'stop_codon', 
                      'match', 'cDNA_match']
     final_gtf_df['feature'] = pd.Categorical(final_gtf_df['feature'], categories=feature_order, ordered=True)
@@ -464,19 +623,14 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
     # original_index と feature でソート
     final_gtf_df = final_gtf_df.sort_values(by=['original_index', 'feature'], ascending=[True, True])
 
+    # 重複行を削除
+    final_gtf_df = final_gtf_df.drop_duplicates()
+
     # データ部分を文字列形式に変換
     gtf_data_lines = final_gtf_df.to_csv(sep='\t', header=False, index=False, quoting=csv.QUOTE_NONE).splitlines()
 
     # コメント行を先頭に追加し、データ部分を結合
     output_lines = comment_lines + gtf_data_lines
-
-    # デバッグ: output_lines に five_prime_UTR が含まれているか確認
-    print("Debug: Output lines (five_prime_UTR):")
-    print([line for line in output_lines if 'five_prime_UTR' in line])
-
-    # 保存処理
-    # 正規表現を使用して空行を削除
-    output_lines = [line for line in output_lines if not re.match(r'^\s*$', line)]
 
     with open(output_file, 'w') as f:
         f.write('\n'.join(output_lines) + '\n')
