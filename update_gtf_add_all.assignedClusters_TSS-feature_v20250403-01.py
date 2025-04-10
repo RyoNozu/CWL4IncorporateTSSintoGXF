@@ -72,7 +72,14 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
 
     # gene_group に含まれなかった行を抽出
     processed_gene_ids = tss_gene_ids  # 処理対象の gene_id
-    unprocessed_rows = gtf_df[~gtf_df['gene_id'].isin(processed_gene_ids)]
+    unprocessed_rows = gtf_df[
+        ~gtf_df['gene_id'].isin(processed_gene_ids) & 
+        ~gtf_df['feature'].isin(['transcript', 'mRNA', 'exon'])  # 'exon' を追加
+    ]
+
+    # デバッグ: unprocessed_rows の内容を確認
+    print("Debug: Unprocessed rows (excluding transcript, mRNA, exon):")
+    print(unprocessed_rows[unprocessed_rows['feature'].isin(['transcript', 'mRNA', 'exon'])])
 
     # TSSのgene_idに基づいて更新
     for gene_id in tss_gene_ids:
@@ -136,6 +143,7 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
 
                         # 元の transcript 行を削除
                         gtf_df = gtf_df[~((gtf_df['feature'].isin(['transcript', 'mRNA'])) & (gtf_df['transcript_id'] == transcript_id))]
+                        print(gtf_df[(gtf_df['feature'].isin(['transcript', 'mRNA'])) & (gtf_df['transcript_id'] == transcript_id)])
 
                 # exon の更新処理
                 if not exons.empty:
@@ -378,7 +386,6 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                             updated_gtf.append({**updated_transcript.iloc[0].to_dict(), 'original_index': updated_transcript.index[0]})
                             print(f"Updated transcript for transcript_id {transcript_id}:")
                             print(updated_transcript.iloc[0])
-
                             # 元の transcript または mRNA 行を削除
                             gtf_df = gtf_df[~((gtf_df['feature'].isin(['transcript', 'mRNA'])) & (gtf_df['transcript_id'] == transcript_id))]
 
@@ -399,7 +406,6 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                         updated_gtf.append({**smallest_start_exon.to_dict(), 'original_index': smallest_start_exon.name})
                         print(f"Updated exon for transcript_id {transcript_id} (smallest start):")
                         print(smallest_start_exon)
-
                         # 元の exon 行を削除
                         gtf_df = gtf_df[~((gtf_df['feature'] == 'exon') & (gtf_df['transcript_id'] == transcript_id))]
 
@@ -493,7 +499,6 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                             updated_gtf.append({**updated_transcript.iloc[0].to_dict(), 'original_index': updated_transcript.index[0]})
                             print(f"Updated transcript for transcript_id {transcript_id}:")
                             print(updated_transcript.iloc[0])
-
                             # 元の transcript または mRNA 行を削除
                             gtf_df = gtf_df[~((gtf_df['feature'].isin(['transcript', 'mRNA'])) & (gtf_df['transcript_id'] == transcript_id))]
 
@@ -514,7 +519,6 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                         updated_gtf.append({**largest_end_exon.to_dict(), 'original_index': largest_end_exon.name})
                         print(f"Updated exon for transcript_id {transcript_id} (largest end):")
                         print(largest_end_exon)
-
                         # 元の exon 行を削除
                         gtf_df = gtf_df[~((gtf_df['feature'] == 'exon') & (gtf_df['transcript_id'] == transcript_id))]
 
@@ -606,16 +610,23 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
     # 重複を取り除く前にcDNA_match行を除外
     updated_gtf_only = updated_gtf_df.drop_duplicates()
 
-    # 元の行の中で変更されなかった行を抽出
-    unchanged_gtf = gtf_df[~gtf_df.index.isin(updated_gtf_only.index)]
+    # unchanged_gtf のフィルタリングを強化
+    unchanged_gtf = gtf_df[
+        ~gtf_df.index.isin(updated_gtf_only.index) & 
+        ~gtf_df['feature'].isin(['transcript', 'mRNA', 'exon'])  # 'exon' を追加
+    ]
 
     # デバッグ: unchanged_gtf の内容を確認
-    print("Debug: Unchanged GTF rows:")
-    print(unchanged_gtf.head(50))  # 最初の50行を確認
-    print(f"Total unchanged rows: {len(unchanged_gtf)}")
+    print("Debug: Unchanged GTF rows (excluding transcript, mRNA, exon):")
+    print(unchanged_gtf[unchanged_gtf['feature'].isin(['transcript', 'mRNA', 'exon'])])
 
     # アップデートされた行と変更されなかった行を結合
     final_gtf_df = pd.concat([updated_gtf_only, unchanged_gtf], ignore_index=True)
+    final_gtf_df = final_gtf_df[~final_gtf_df['feature'].isin(['transcript', 'mRNA', 'exon'])]  # 'exon' を追加
+
+    # デバッグ: final_gtf_df の内容を確認
+    print("Debug: Final GTF DataFrame (excluding transcript, mRNA, exon):")
+    print(final_gtf_df[final_gtf_df['feature'].isin(['transcript', 'mRNA', 'exon'])])
 
     # デバッグ: final_gtf_df に five_prime_UTR が含まれているか確認
     print("Debug: Final GTF DataFrame (five_prime_UTR):")
