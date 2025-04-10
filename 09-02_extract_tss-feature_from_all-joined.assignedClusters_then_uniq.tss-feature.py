@@ -28,12 +28,17 @@ for index, row in df.iterrows():
     # 最も高い 'tags.dominant_tss' を持つグループの情報を抽出
     group_chr = row.iloc[1 + max_value_idxint * 12]
     dominant_tss_value = row.iloc[5 + max_value_idxint * 12]
+    group_cluster_start = row.iloc[2 + max_value_idxint * 12]
+    group_cluster_end = row.iloc[3 + max_value_idxint * 12]
+    group_tags = row.iloc[6 + max_value_idxint * 12]
 
     # dominant_tss が NaN の場合はスキップ
     if pd.isna(dominant_tss_value):
         continue
 
     dominant_tss = int(dominant_tss_value)  # dominant_tss を整数に変換
+    group_cluster_start = int(group_cluster_start)  # cluster_start を整数に変換
+    group_cluster_end = int(group_cluster_end)  # cluster_end を整数に変換
 
     # 'start'はdominant_tssから1を引いた位置に設定
     group_start = dominant_tss - 1  # 'start'はTSSの1塩基前
@@ -44,13 +49,12 @@ for index, row in df.iterrows():
 
     # 出力行を作成
     output_row = [
-        group_chr, '.', 'TSS', group_start, dominant_tss, '.', group_strand, row['cluster'],
-        row.iloc[7 + max_value_idxint * 12], group_gene
+        group_chr, 'Cage_analysis', 'cage_cluster', group_cluster_start, group_cluster_end, group_tags, 'TSS', group_start, dominant_tss, row.iloc[7 + max_value_idxint * 12], group_strand, row['cluster'], group_gene
     ]
     output_rows.append(output_row)
 
 # 一時データフレームを作成
-columns = ["chr", "source", "feature", "start", "end", "score", "strand", "cluster", "tags.dominant_tss", "gene"]
+columns = ["chr", "source", "feature1", "start1", "end1", "score1", "feature2", "start2", "end2", "score2", "strand", "cluster", "gene"]
 temp_df = pd.DataFrame(output_rows, columns=columns)
 
 # 'gene' 列を 'gene_id' に変更
@@ -65,20 +69,47 @@ temp_df['tags.dominant_tss'] = pd.to_numeric(temp_df['tags.dominant_tss'], error
 # 重複した遺伝子（gene_id）に対して、tags.dominant_tssが最も高い行を選択
 result_df = temp_df.loc[temp_df.groupby('gene_id')['tags.dominant_tss'].idxmax()]
 
+# 必要なカラムを選択して2つのデータフレームに分割
+df1 = result_df[['chr', 'source', 'feature1', 'start1', 'end1', 'score1', 'strand', 'cluster', 'gene_id']]
+df2 = result_df[['chr', 'source', 'feature2', 'start2', 'end2', 'score2', 'strand', 'cluster', 'gene_id']]
+
 # 列のヘッダーを変更
-result_df.columns = ['seqname', 'source', 'feature', 'start', 'end', 'score', 'strand', 'tss_id', 'tags.dominant_tss', 'gene_id']
-
+df1.columns = ['seqname', 'source', 'feature', 'start', 'end', 'score', 'strand', 'tss_id', 'gene_id']
+df2.columns = ['seqname', 'source', 'feature', 'start', 'end', 'score', 'strand', 'tss_id', 'gene_id']
 # 列の順番を変更し、end 列を2度使用
-result_df = result_df[['tss_id', 'seqname', 'start', 'end', 'strand', 'end', 'source', 'feature', 'score', 'tags.dominant_tss', 'gene_id']]
-
+df1 = df1[['tss_id', 'seqname', 'feature', 'start', 'end', 'strand', 'end', 'source', 'feature', 'score', 'gene_id']]
 # 6列目のヘッダーを「tss_pos」に変更
-result_df.columns = ['tss_id', 'seqname', 'start', 'end', 'strand', 'tss_pos', 'source', 'feature', 'score', 'tags.dominant_tss', 'gene_id']
+df1.columns = ['tss_id', 'seqname', 'start', 'end', 'strand', 'tss_pos', 'source', 'feature', 'score', 'gene_id']
+# 列の順番を変更し、end 列を2度使用
+df2 = df2[['tss_id', 'seqname', 'feature', 'start', 'end', 'strand', 'end', 'source', 'feature', 'score', 'gene_id']]
+# 6列目のヘッダーを「tss_pos」に変更
+df2.columns = ['tss_id', 'seqname', 'start', 'end', 'strand', 'tss_pos', 'source', 'feature', 'score', 'gene_id']
 
 # 1列目の値でソート
-result_df = result_df.sort_values(by='tss_id')
+df1 = df1.sort_values(by='tss_id')
+df2 = df2.sort_values(by='tss_id')
 
-# 結果を "all_tss_feature_uniq.gene.tsv" として保存
-result_df.to_csv("all_tss_feature_uniq.gene.tsv", sep="\t", index=False)
+# 分割したデータフレームをそれぞれ保存
+df1.to_csv("all_cage_cluster_feature_quniq.gene.tsv", sep="\t", index=False)
+df2.to_csv("all_tss_feature_uniq.gene.tsv", sep="\t", index=False)
 
-print("処理が完了しました。")
-print("all_tss_feature.tsv と all_tss_feature_uniq.gene.tsv が生成されました。")
+print("2つのデータフレームに分割して保存しました。")
+print("tss_positions.tsv と tss_metadata.tsv が生成されました。")
+
+### # 列のヘッダーを変更
+### result_df.columns = ['seqname', 'source', 'feature1', 'start1', 'end1', 'feature2', 'start2', 'end2', 'score', 'strand', 'tss_id', 'gene_id']
+### 
+### # 列の順番を変更し、end 列を2度使用
+### result_df = result_df[['tss_id', 'seqname', 'feature1', 'start1', 'end1', 'strand', 'end', 'source', 'feature', 'score', 'gene_id']]
+### 
+### # 6列目のヘッダーを「tss_pos」に変更
+### result_df.columns = ['tss_id', 'seqname', 'start', 'end', 'strand', 'tss_pos', 'source', 'feature', 'score', 'gene_id']
+### 
+### # 1列目の値でソート
+### result_df = result_df.sort_values(by='tss_id')
+### 
+### # 結果を "all_tss_feature_uniq.gene.tsv" として保存
+### result_df.to_csv("all_tss_feature_uniq.gene.tsv", sep="\t", index=False)
+### 
+### print("処理が完了しました。")
+### print("all_tss_feature.tsv と all_tss_feature_uniq.gene.tsv が生成されました。")
