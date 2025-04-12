@@ -1,6 +1,7 @@
 Data/Zebrafish_public
 Data/Halichoeres_trimaculatus
 Data/seqs_by_scaffold
+Data/Zebrafish_public_pe/SRR_Acc_List.txt
 cwl_cache/
 .DS_Store
 out/

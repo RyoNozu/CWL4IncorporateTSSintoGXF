@@ -10,11 +10,12 @@ BiocManager::install("Gviz") # version 1.48.0
 BiocManager::install("rtracklayer") # version 1.64.0
 BiocManager::install("DESeq2") # version 1.44.0
 BiocManager::install("BSgenome") # version 1.72.0
+BiocManager::install("BSgenomeForge")
 
 install.packages("data.table") # version 1.16.4
 install.packages("stringr") # version 1.5.1
 
-devtools::install_github("Linlab-slu/TSSr", build_vignettes = TRUE) # version 0.99.6
+devtools::install_github("Linlab-slu/TSSr", ref = "v0.99.1", build_vignettes = TRUE,force = TRUE) # version 0.99.6
 
 library(TSSr)
 

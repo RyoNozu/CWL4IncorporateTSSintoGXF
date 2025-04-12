@@ -39,6 +39,6 @@
         "installSystemRequirements": true
       }
     },
-    "postCreateCommand": "R -e \"if (!require('BiocManager', quietly = TRUE)) install.packages('BiocManager'); BiocManager::install(c('Rsamtools', 'GenomicRanges', 'GenomicFeatures', 'Gviz', 'rtracklayer', 'DESeq2', 'BSgenome', 'data.table', 'stringr')); install.packages('remotes'); remotes::install_github('Linlab-slu/TSSr'); IRkernel::installspec(user = FALSE)\"" 
+    "postCreateCommand": "chmod +x .devcontainer/install-r-packages.sh && .devcontainer/install-r-packages.sh"
   }
   

@@ -14,7 +14,13 @@ RUN apt-get update && apt-get -y upgrade && apt-get install -y --no-install-reco
     build-essential \
     libgmp-dev \
     libmagick++-dev \
-    libglpk-dev
+    libglpk-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libfreetype6-dev \
+    libpng-dev \
+    libgit2-dev \
+    pandoc
 
 # RUN SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhistory/.bash_history" \
 #     && echo "$SNIPPET" >> "/root/.bashrc"
