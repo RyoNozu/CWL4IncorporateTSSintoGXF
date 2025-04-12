@@ -6,9 +6,9 @@ import re  # 正規表現モジュールをインポート
 
 # 出力の幅を広げる
 ###pd.set_option('display.max_colwidth', None)  # 列の最大幅を無制限に設定
-pd.set_option('display.max_columns', 250)  # 表示する列数を無制限に設定
-pd.set_option('display.width', 250)        # 出力の幅を広げる
-pd.set_option('display.max_rows', 250)     # 表示する行数を無制限に設定
+pd.set_option('display.max_columns', 100)  # 表示する列数を無制限に設定
+pd.set_option('display.width', 100)        # 出力の幅を広げる
+pd.set_option('display.max_rows', 100)     # 表示する行数を無制限に設定
 
 def extract_gene_id(attribute_column, file_type):
     """
@@ -18,7 +18,7 @@ def extract_gene_id(attribute_column, file_type):
         return attribute_column.str.extract(r'gene_id\s*"?([^";]+)"?')
     elif file_type == "gff":
         # ID=gene-, Parent=gene-, または gene= の形式を探す
-        return attribute_column.str.extract(r'(?:gene_id=|ID=gene-|Parent=gene-|gene=)([^;]+)')
+        return attribute_column.str.extract(r'(?:gene=|gene_id=|ID=gene-|Parent=gene-)([^;]+)')
     else:
         raise ValueError("Unsupported file type. Only GTF and GFF are supported.")
 
@@ -86,29 +86,26 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
     if not missing_gene_id_rows.empty:
         print("\nRows without gene_id:")
         print(missing_gene_id_rows)
-    
-        ### # 必要に応じてファイルに出力
-        ### missing_gene_id_output_file = "missing_gene_id_rows_debug_output.tsv"
-        ### missing_gene_id_rows.to_csv(missing_gene_id_output_file, sep='\t', index=False)
-        ### print(f"Rows without gene_id have been written to {missing_gene_id_output_file}")
     else:
         print("\nAll rows contain gene_id.")
 
     # gene_group に含まれなかった行を抽出
     processed_gene_ids = tss_gene_ids  # 処理対象の gene_id
-    unprocessed_rows = gtf_df[
-        ~gtf_df['gene_id'].isin(processed_gene_ids)
-    ]
+    processed_rows = gtf_df[gtf_df['gene_id'].isin(processed_gene_ids)]
+    unprocessed_rows = gtf_df[~gtf_df['gene_id'].isin(processed_gene_ids)]
 
-    # デバッグ: unprocessed_rows の内容を出力
-    print("\nDebug: Unprocessed rows (rows with gene_id not in processed_gene_ids):")
-    print(unprocessed_rows)
-    
+    # 必要に応じてファイルに出力
+    processed_rows_output_file = "processed_rows_debug_output.tsv"
+    processed_rows.to_csv(processed_rows_output_file, sep='\t', index=False)
+    print(f"Processed rows have been written to {processed_rows_output_file}")
     # 必要に応じてファイルに出力
     unprocessed_rows_output_file = "unprocessed_rows_debug_output.tsv"
     unprocessed_rows.to_csv(unprocessed_rows_output_file, sep='\t', index=False)
     print(f"Unprocessed rows have been written to {unprocessed_rows_output_file}")
 
+    # 更新の対象とる行を予め unchanged_gtf に追加し、最終的に更新行のindexを使って削除
+    for idx, row in processed_rows.iterrows():
+        unchanged_gtf.append({**row.to_dict(), 'original_index': idx})
     # 更新の対象とならない行を unchanged_gtf に追加
     for idx, row in unprocessed_rows.iterrows():
         unchanged_gtf.append({**row.to_dict(), 'original_index': idx})
@@ -222,6 +219,51 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                     updated_gtf.append(original_exon)
                     print(f"Original exon entry added to updated_gtf for transcript_id {transcript_id}:")
 
+
+                # TSS feature の追加処理
+                if not tss_group.empty:
+                    # TSS feature の属性を作成
+                    if file_type == "gtf":
+                        tss_attribute = (
+                            f'gene_id "{gene.iloc[0]["gene_id"]}"; '
+                            f'transcript_id "{transcript_id}"; '
+                            f'tss_id "tss_id-{tss_group.iloc[0]["tss_id"]}";'
+                        )
+                    elif file_type == "gff":
+                        tss_attribute = (
+                            f'ID=tss_id-{tss_group.iloc[0]["tss_id"]};'
+                            f'gene={gene.iloc[0]["gene_id"]};'
+                            f'transcript_id={transcript_id};'
+                        )
+                    else:
+                        raise ValueError("Unsupported file type. Only GTF and GFF are supported.")
+                
+                    # TSS feature の行を作成
+                    tss_feature = pd.DataFrame({
+                        'seqname': [gene.iloc[0]['seqname']],
+                        'source': ['TSSr'],
+                        'feature': ['TSS'],
+                        'start': [int(tss_pos)],
+                        'end': [int(tss_pos)],  # TSS は単一の位置なので start と end は同じ
+                        'score': [tss_group.iloc[0]['score']],  # tss_df の score を使用
+                        'strand': [strand],
+                        'frame': ['.'],
+                        'attribute': [tss_attribute]
+                    })
+
+                    # 対応する transcript_id の最後の CDS 行のインデックスを取得
+                    last_cds_index = cds[cds['transcript_id'] == transcript_id].index.max()
+
+                    # TSS feature をリストに追加
+                    tss_feature_dict = {**tss_feature.iloc[0].to_dict(), 'original_index': last_cds_index}
+                    updated_gtf.append(tss_feature_dict)
+                
+                    # デバッグ: TSS feature の情報を確認
+                    print("Added TSS feature:")
+                    print(tss_feature_dict)
+
+
+
                 # five_prime_UTR の計算と追加処理
                 # 最初の CDS を基準に five_prime_utr_end を計算
                 five_prime_utr_start = tss_pos
@@ -332,6 +374,51 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                     updated_gtf.append(original_exon)
                     print(f"Original exon entry added to updated_gtf for transcript_id {transcript_id}:")
 
+
+                # TSS feature の追加処理
+                if not tss_group.empty:
+                    # TSS feature の属性を作成
+                    if file_type == "gtf":
+                        tss_attribute = (
+                            f'gene_id "{gene.iloc[0]["gene_id"]}"; '
+                            f'transcript_id "{transcript_id}"; '
+                            f'tss_id "tss_id-{tss_group.iloc[0]["tss_id"]}";'
+                        )
+                    elif file_type == "gff":
+                        tss_attribute = (
+                            f'ID=tss_id-{tss_group.iloc[0]["tss_id"]};'
+                            f'gene={gene.iloc[0]["gene_id"]};'
+                            f'transcript_id={transcript_id};'
+                        )
+                    else:
+                        raise ValueError("Unsupported file type. Only GTF and GFF are supported.")
+                
+                    # TSS feature の行を作成
+                    tss_feature = pd.DataFrame({
+                        'seqname': [gene.iloc[0]['seqname']],
+                        'source': ['TSSr'],
+                        'feature': ['TSS'],
+                        'start': [int(tss_pos)],
+                        'end': [int(tss_pos)],  # TSS は単一の位置なので start と end は同じ
+                        'score': [tss_group.iloc[0]['score']],  # tss_df の score を使用
+                        'strand': [strand],
+                        'frame': ['.'],
+                        'attribute': [tss_attribute]
+                    })
+
+                    # 対応する transcript_id の最後の CDS 行のインデックスを取得
+                    last_cds_index = cds[cds['transcript_id'] == transcript_id].index.max()
+
+                    # TSS feature をリストに追加
+                    tss_feature_dict = {**tss_feature.iloc[0].to_dict(), 'original_index': last_cds_index}
+                    updated_gtf.append(tss_feature_dict)
+                
+                    # デバッグ: TSS feature の情報を確認
+                    print("Added TSS feature:")
+                    print(tss_feature_dict)
+
+
+
                 # five_prime_UTR の計算と追加処理
                 # 最後の CDS を基準に five_prime_utr_start を計算
                 five_prime_utr_start = cds[cds['transcript_id'] == transcript_id]['end'].max() + 1
@@ -432,20 +519,20 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                             updated_gene['original_index'] = gene.index[0]
                             updated_gtf.append(updated_gene)
                             print(f"Updated gene start for gene_id {target_gene_id} to {tss_pos} (matched transcript start).")
-                        else:
-                            print(f"Gene start for gene_id {target_gene_id} not updated (transcript start does not match gene start).")
-                            original_gene = gene.iloc[0].to_dict()
-                            original_gene['original_index'] = gene.index[0]
-                            updated_gtf.append(original_gene)
-                            print(f"Original gene entry added to updated_gtf for gene_id {target_gene_id}:")
-                            print(original_gene)
-                    else:
-                        print(f"Gene start for gene_id {target_gene_id} not updated (TSS position is inside CDS).")
-                        # オリジナルの gene 行を updated_gtf に追加
-                        original_gene = gene.iloc[0].to_dict()
-                        original_gene['original_index'] = gene.index[0]
-                        unchanged_gtf.append(original_gene)
-                        print(f"Original gene entry added to updated_gtf for gene_id {target_gene_id}:")
+#                        else:
+#                            print(f"Gene start for gene_id {target_gene_id} not updated (transcript start does not match gene start).")
+#                            original_gene = gene.iloc[0].to_dict()
+#                            original_gene['original_index'] = gene.index[0]
+#                            updated_gtf.append(original_gene)
+#                            print(f"Original gene entry added to updated_gtf for gene_id {target_gene_id}:")
+#                            print(original_gene)
+####                    else:
+####                        print(f"Gene start for gene_id {target_gene_id} not updated (TSS position is inside CDS).")
+####                        # オリジナルの gene 行を updated_gtf に追加
+####                        original_gene = gene.iloc[0].to_dict()
+####                        original_gene['original_index'] = gene.index[0]
+####                        unchanged_gtf.append(original_gene)
+####                        print(f"Original gene entry added to updated_gtf for gene_id {target_gene_id}:")
 
                     # transcript の更新処理
                     if not transcripts.empty:
@@ -464,12 +551,12 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                                 updated_gtf.append(updated_transcript)
                                 print(f"Original transcript entry added to updated_gtf for transcript_id {transcript_id}:")
     
-                        # 選択されなかった transcript_id の行をそのまま追加
-                        other_transcripts = transcripts[transcripts['transcript_id'] != transcript_id]
-                        for idx, transcript_row in other_transcripts.iterrows():
-                            unchanged_gtf.append({**transcript_row.to_dict(), 'original_index': idx})
-                            ###print(f"Unmodified transcript added for transcript_id {transcript_row['transcript_id']}:")
-                            ###print(transcript_row)
+####                        # 選択されなかった transcript_id の行をそのまま追加
+####                        other_transcripts = transcripts[transcripts['transcript_id'] != transcript_id]
+####                        for idx, transcript_row in other_transcripts.iterrows():
+####                            unchanged_gtf.append({**transcript_row.to_dict(), 'original_index': idx})
+####                            ###print(f"Unmodified transcript added for transcript_id {transcript_row['transcript_id']}:")
+####                            ###print(transcript_row)
 
                     # exon の更新処理
                     related_exons = exons[exons['attribute'].str.contains(
@@ -494,17 +581,61 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                             # オリジナルの exon 行を updated_gtf に追加
                             original_exon = related_exons.iloc[0].to_dict()
                             original_exon['original_index'] = related_exons.index[0]
-                            unchanged_gtf.append(original_exon)
+                            updated_gtf.append(original_exon)
                             print(f"Original exon entry added to updated_gtf for transcript_id {transcript_id}:")
                         
-                        # 選ばれなかった transcript_id を持つ exon をそのまま追加
-                        unselected_exons = exons[~exons['attribute'].str.contains(
-                            rf'transcript_id[ =]"?{transcript_id}"?', regex=True
-                        )]
-                        for idx, exon_row in unselected_exons.iterrows():
-                            unchanged_gtf.append({**exon_row.to_dict(), 'original_index': idx})
-                            ###print(f"Unmodified exon added for unselected transcript_id {exon_row['attribute']}:")
-                            ###print(exon_row)
+####                        # 選ばれなかった transcript_id を持つ exon をそのまま追加
+####                        unselected_exons = exons[~exons['attribute'].str.contains(
+####                            rf'transcript_id[ =]"?{transcript_id}"?', regex=True
+####                        )]
+####                        for idx, exon_row in unselected_exons.iterrows():
+####                            unchanged_gtf.append({**exon_row.to_dict(), 'original_index': idx})
+####                            ###print(f"Unmodified exon added for unselected transcript_id {exon_row['attribute']}:")
+####                            ###print(exon_row)
+
+
+                    # TSS feature の追加処理
+                    if not tss_group.empty:
+                        # TSS feature の属性を作成
+                        if file_type == "gtf":
+                            tss_attribute = (
+                                f'gene_id "{gene.iloc[0]["gene_id"]}"; '
+                                f'transcript_id "{transcript_id}"; '
+                                f'tss_id "tss_id-{tss_group.iloc[0]["tss_id"]}";'
+                            )
+                        elif file_type == "gff":
+                            tss_attribute = (
+                                f'ID=tss_id-{tss_group.iloc[0]["tss_id"]};'
+                                f'gene={gene.iloc[0]["gene_id"]};'
+                                f'transcript_id={transcript_id};'
+                            )
+                        else:
+                            raise ValueError("Unsupported file type. Only GTF and GFF are supported.")
+                    
+                        # TSS feature の行を作成
+                        tss_feature = pd.DataFrame({
+                            'seqname': [gene.iloc[0]['seqname']],
+                            'source': ['TSSr'],
+                            'feature': ['TSS'],
+                            'start': [int(tss_pos)],
+                            'end': [int(tss_pos)],  # TSS は単一の位置なので start と end は同じ
+                            'score': [tss_group.iloc[0]['score']],  # tss_df の score を使用
+                            'strand': [strand],
+                            'frame': ['.'],
+                            'attribute': [tss_attribute]
+                        })
+    
+                        # 対応する transcript_id の最後の CDS 行のインデックスを取得
+                        last_cds_index = cds[cds['transcript_id'] == transcript_id].index.max()
+    
+                        # TSS feature をリストに追加
+                        tss_feature_dict = {**tss_feature.iloc[0].to_dict(), 'original_index': last_cds_index}
+                        updated_gtf.append(tss_feature_dict)
+                    
+                        # デバッグ: TSS feature の情報を確認
+                        print("Added TSS feature:")
+                        print(tss_feature_dict)
+
 
                     # five_prime_UTR の計算と追加処理    
                     # 最初の CDS を基準に five_prime_utr_end を計算
@@ -571,20 +702,20 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                             updated_gene = gene.iloc[0].to_dict()
                             updated_gene['original_index'] = gene.index[0]
                             updated_gtf.append(updated_gene)
-                        else:
-                            print(f"Gene start for gene_id {target_gene_id} not updated (transcript start does not match gene start).")
-                            original_gene = gene.iloc[0].to_dict()
-                            original_gene['original_index'] = gene.index[0]
-                            updated_gtf.append(original_gene)
-                            print(f"Original gene entry added to updated_gtf for gene_id {target_gene_id}:")
-                            print(original_gene)    
-                    else:
-                        print(f"Gene start for gene_id {target_gene_id} not updated (TSS position is inside CDS).")
-                        # オリジナルの gene 行を updated_gtf に追加
-                        original_gene = gene.iloc[0].to_dict()
-                        original_gene['original_index'] = gene.index[0]
-                        unchanged_gtf.append(original_gene)
-                        print(f"Original gene entry added to updated_gtf for gene_id {target_gene_id}:")
+#                        else:
+#                            print(f"Gene start for gene_id {target_gene_id} not updated (transcript start does not match gene start).")
+#                            original_gene = gene.iloc[0].to_dict()
+#                            original_gene['original_index'] = gene.index[0]
+#                            updated_gtf.append(original_gene)
+#                            print(f"Original gene entry added to updated_gtf for gene_id {target_gene_id}:")
+#                            print(original_gene)    
+####                    else:
+####                        print(f"Gene start for gene_id {target_gene_id} not updated (TSS position is inside CDS).")
+####                        # オリジナルの gene 行を updated_gtf に追加
+####                        original_gene = gene.iloc[0].to_dict()
+####                        original_gene['original_index'] = gene.index[0]
+####                        unchanged_gtf.append(original_gene)
+####                        print(f"Original gene entry added to updated_gtf for gene_id {target_gene_id}:")
 
                     # transcript の更新処理を追加
                     if not transcripts.empty:
@@ -604,12 +735,12 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                                 unchanged_gtf.append(updated_transcript)
                                 print(f"Original transcript entry added to updated_gtf for transcript_id {transcript_id}:")
     
-                        # 選択されなかった transcript_id の行をそのまま追加
-                        other_transcripts = transcripts[transcripts['transcript_id'] != transcript_id]
-                        for idx, transcript_row in other_transcripts.iterrows():
-                            unchanged_gtf.append({**transcript_row.to_dict(), 'original_index': idx})
-                            ###print(f"Unmodified transcript added for transcript_id {transcript_row['transcript_id']}:")
-                            ###print(transcript_row)
+####                        # 選択されなかった transcript_id の行をそのまま追加
+####                        other_transcripts = transcripts[transcripts['transcript_id'] != transcript_id]
+####                        for idx, transcript_row in other_transcripts.iterrows():
+####                            unchanged_gtf.append({**transcript_row.to_dict(), 'original_index': idx})
+####                            ###print(f"Unmodified transcript added for transcript_id {transcript_row['transcript_id']}:")
+####                            ###print(transcript_row)
 
                     # exon の更新処理を追加
                     # 選択された transcript_id に関連する exon を取得
@@ -635,16 +766,60 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                             # オリジナルの exon 行を updated_gtf に追加
                             original_exon = related_exons.iloc[0].to_dict()
                             original_exon['original_index'] = related_exons.index[0]
-                            unchanged_gtf.append(original_exon)
+                            updated_gtf.append(original_exon)
                             print(f"Original exon entry added to updated_gtf for transcript_id {transcript_id}:")
-                        # 選ばれなかった transcript_id を持つ exon をそのまま追加
-                        unselected_exons = exons[~exons['attribute'].str.contains(
-                            rf'transcript_id[ =]"?{transcript_id}"?', regex=True
-                        )]
-                        for idx, exon_row in unselected_exons.iterrows():
-                            unchanged_gtf.append({**exon_row.to_dict(), 'original_index': idx})
-                            ###print(f"Unmodified exon added for unselected transcript_id {exon_row['attribute']}:")
-                            ###print(exon_row)
+####                        # 選ばれなかった transcript_id を持つ exon をそのまま追加
+####                        unselected_exons = exons[~exons['attribute'].str.contains(
+####                            rf'transcript_id[ =]"?{transcript_id}"?', regex=True
+####                        )]
+####                        for idx, exon_row in unselected_exons.iterrows():
+####                            unchanged_gtf.append({**exon_row.to_dict(), 'original_index': idx})
+####                            ###print(f"Unmodified exon added for unselected transcript_id {exon_row['attribute']}:")
+####                            ###print(exon_row)
+
+
+                    # TSS feature の追加処理
+                    if not tss_group.empty:
+                        # TSS feature の属性を作成
+                        if file_type == "gtf":
+                            tss_attribute = (
+                                f'gene_id "{gene.iloc[0]["gene_id"]}"; '
+                                f'transcript_id "{transcript_id}"; '
+                                f'tss_id "tss_id-{tss_group.iloc[0]["tss_id"]}";'
+                            )
+                        elif file_type == "gff":
+                            tss_attribute = (
+                                f'ID=tss_id-{tss_group.iloc[0]["tss_id"]};'
+                                f'gene={gene.iloc[0]["gene_id"]};'
+                                f'transcript_id={transcript_id};'
+                            )
+                        else:
+                            raise ValueError("Unsupported file type. Only GTF and GFF are supported.")
+                    
+                        # TSS feature の行を作成
+                        tss_feature = pd.DataFrame({
+                            'seqname': [gene.iloc[0]['seqname']],
+                            'source': ['TSSr'],
+                            'feature': ['TSS'],
+                            'start': [int(tss_pos)],
+                            'end': [int(tss_pos)],  # TSS は単一の位置なので start と end は同じ
+                            'score': [tss_group.iloc[0]['score']],  # tss_df の score を使用
+                            'strand': [strand],
+                            'frame': ['.'],
+                            'attribute': [tss_attribute]
+                        })
+    
+                        # 対応する transcript_id の最後の CDS 行のインデックスを取得
+                        last_cds_index = cds[cds['transcript_id'] == transcript_id].index.max()
+    
+                        # TSS feature をリストに追加
+                        tss_feature_dict = {**tss_feature.iloc[0].to_dict(), 'original_index': last_cds_index}
+                        updated_gtf.append(tss_feature_dict)
+                    
+                        # デバッグ: TSS feature の情報を確認
+                        print("Added TSS feature:")
+                        print(tss_feature_dict)
+
 
                     # five_prime_UTR の計算と追加処理    
                     # 最後の CDS を基準に five_prime_utr_start を計算
@@ -752,7 +927,7 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
         try:
             # feature列のカスタム順序を設定
             feature_order = ['region', 'gene', 'pseudogene', 'transcript', 'mRNA', 'lnc_RNA', 'tRNA', 'miRNA', 'primary_transcript', 'rRNA', 
-                            'exon', 'intron', 'CDS', 'five_prime_UTR', 'three_prime_UTR', 'start_codon', 'stop_codon', 
+                            'exon', 'intron', 'CDS', 'TSS', 'five_prime_UTR', 'three_prime_UTR', 'start_codon', 'stop_codon', 
                             'V_gene_segment', 'C_gene_segment', 'RNase_P_RNA', 'antisense_RNA', 'match', 'cDNA_match']
             final_gtf_df['feature'] = pd.Categorical(final_gtf_df['feature'], categories=feature_order, ordered=True)
 
@@ -798,7 +973,7 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
             print(feature_diff)
 
             # final_gtf_df に含まれていない feature 行を抽出
-            missing_features = ['gene', 'mRNA', 'transcript']
+            missing_features = ['gene', 'mRNA', 'transcript', 'exon']
             if 'original_index' in gtf_df_original.columns and 'original_index' in final_gtf_df.columns:
                 missing_rows = gtf_df_original[
                     (gtf_df_original['feature'].isin(missing_features)) &
