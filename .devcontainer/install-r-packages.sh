@@ -7,7 +7,7 @@ if (!requireNamespace('BiocManager', quietly = TRUE))
   install.packages('BiocManager', version = '3.20')
 
 # Bioconductor (v3.20) packages
-BiocManager::install(c(\"Rsamtools\", \"GenomicRanges\", \"GenomicFeatures\", \"Gviz\", \"rtracklayer\", \"DESeq2\", \"BSgenome\", \"BSgenomeForge\", \"data.table\", \"stringr\"))
+BiocManager::install(c(\"Rsamtools\", \"GenomicRanges\", \"GenomicFeatures\", \"Gviz\", \"rtracklayer\", \"DESeq2\", \"BSgenome\", \"BSgenomeForge\", \"data.table\", \"stringr\", \"txdbmaker\"))
 
 # Install from GitHub
 # Install required packages with specific versions
@@ -17,5 +17,5 @@ devtools::install_github(\"Linlab-slu/TSSr\", ref = \"v0.99.1\", build_vignettes
 # Print installed package versions for verification
 installed.packages()[c('devtools', 'BiocManager', 'Rsamtools', 'GenomicRanges', 
                        'GenomicFeatures', 'Gviz', 'rtracklayer', 'DESeq2', 
-                       'BSgenome', 'BSgenomeForge', 'data.table', 'stringr'), 'Version']
+                       'BSgenome', 'BSgenomeForge', 'data.table', 'stringr', 'txdbmaker'), 'Version']
 "

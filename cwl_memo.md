@@ -136,3 +136,31 @@ Expected value of 'reference_genome' to have format 'http://edamontology.org/for
 ```bash
 cwltool --debug --outdir ./test/ --cachedir ./cwl_cache/ ./workflow/cageseq_gtf_update_pe.cwl ./config/Workflow_config/cageseq_gtf_update_pe.yml
 ```
+
+&nbsp;
+
+## 2025/04/12 memo by yonezawa
+
+### 全体の流れについて
+
+- TSSrから09-02までの処理はこちらの環境で実行を確認し、野津さんにも確認いただいた
+- 各スクリプトはもしかしたらこちらで少し改良してCWL化するかも
+- 
+
+
+```bash
+Rscript 05--08-combined_exec_TSSr.R ./Data/Halichoeres_trimaculatus/braker_correctID_v3.gtf 2 1 1 A B
+
+python3 09-01_join_all_assignedClusters.py *.assignedClusters.txt # ファイルを一つずつ指定することもできる
+
+python3 09-02_extract_tss-feature_from_all-joined.assignedClusters_then_uniq.tss-feature.py 
+
+# これはまだ改良するかもとのこと (by 野津さん)
+# 最終的に野津さんが修正し、OKになった
+python3 10_draft_update_gtf_add_all.assignedClusters_TSS-feature_v20250403-01.py Data/Halichoeres_trimaculatus/braker_correctID_v3.gtf all_tss_feature_uniq.gene.tsv test.gtf > log.txt
+```
+
+### GTFとGFFの分岐について
+
+- これもできたらやる
+- ワークフローとして別々に作ってもいいかも

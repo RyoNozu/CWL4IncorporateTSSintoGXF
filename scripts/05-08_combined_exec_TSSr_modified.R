@@ -11,22 +11,71 @@
 # BiocManager::install("DESeq2") # version 1.44.0
 # BiocManager::install("BSgenome") # version 1.72.0
 # BiocManager::install("BSgenomeForge")
-# BiocManager::install("txdbmaker")
+
 # install.packages("data.table") # version 1.16.4
 # install.packages("stringr") # version 1.5.1
 
 # devtools::install_github("Linlab-slu/TSSr", ref = "v0.99.1", build_vignettes = TRUE,force = TRUE) # version 0.99.6
 
 library(TSSr)
+library(optparse)
+
+option_list <- list(
+  make_option(
+    c("-r", "--refSource"),
+    type = "character",
+    default = NULL,
+    help="Reference source file (GTF or GFF file)", metavar="FILE"
+  ),
+  make_option(
+    c("-s", "--seedFile"),
+    type = "character",
+    default = NULL,
+    help = "Seed file for BSgenome",
+    metavar = "FILE"
+  ),
+  make_option(
+    c("-g", "--group_count"),
+    type = "integer",
+    default = 1,
+    help = "Number of groups",
+    metavar = "INTEGER"
+  ),
+  make_option(
+    c("-s", "--sizes"),
+    type = "character",
+    default = NULL,
+    help = "Comma-separated list of file counts for each group (e.g., '3,3,1,1')",
+    metavar = "STRING"
+  ),
+  make_option(
+    c("-p", "--prefixes"),
+    type = "character",
+    default = NULL,
+    help = "Comma-separated list of prefixes for each group (e.g., 'prefix1,prefix2,prefix3,prefix4')",
+    metavar = "STRING"
+  ),
+  make_option(
+    c("-t", "--threads"),
+    type = "integer",
+    default = 10,
+    help = "Number of threads",
+    metavar = "INTEGER"
+  )
+)
+
+opt_parser <- OptionParser(option_list = option_list)
+opt <- parse_args(opt_parser)
+
 
 
 # generate BSgenome Package for target species
 # This is example case, H. trimaculatus
 # seed file: BSgenome.Htrimaculatus.Htriv1.1-seed.txt
 
-BSgenomeForge::forgeBSgenomeDataPkg("./Data/Halichoeres_trimaculatus/BSgenome.Htrimaculatus.Htriv1.1-seed_2.txt", replace = TRUE)
+BSgenomeForge::forgeBSgenomeDataPkg(opt$seedFile, replace = TRUE)
 devtools::build("BSgenome.Htrimaculatus.inhouse.Htriv1")
-# devtools::check_built("BSgenome.Htrimaculatus.inhouse.Htriv1_1.0.0.tar.gz") # Yonezawa この `check_built` が原因で解析がストップしてしまっていたのでコメントアウト
+# devtools::check_built("BSgenome.Htrimaculatus.inhouse.Htriv1_1.0.0.tar.gz") # この `check_built` が原因で解析がストップしてしまっていたのでコメントアウト
 devtools::install_local("BSgenome.Htrimaculatus.inhouse.Htriv1_1.0.0.tar.gz")
 
 
@@ -34,8 +83,8 @@ devtools::install_local("BSgenome.Htrimaculatus.inhouse.Htriv1_1.0.0.tar.gz")
 # 実行方法: e.g. カレントディレクトリのbamファイルを読み込み, refSource: gtf file, 4 groups, each group has 3, 3, 1, 1 files, prefixes: prefix of each group
 # % Rscript exec_TSSr_combine_step05-08.R "refSource" 4 3 3 1 1 prefix1 prefix2 prefix3 prefix4
 
-inputFiles <- list.files(path = ".", pattern = "Aligned.sortedByCoord.out.bam$", full.names = TRUE)
-inputFilesType <- "bamPairedEnd"  # set “inputFilesType” as “bamPairedEnd” for paired-end BAM files, and as "TSStable" if the input file is a TSS table 
+inputFiles <- list.files(path = "./out", pattern = "Aligned.sortedByCoord.out.bam$", full.names = TRUE)
+inputFilesType <- "bamPairedEnd"  # set “inputFilesType” as “bamPairedEnd” for paired-end BAM files, and as "TSStable" if the input file is a TSS table (sigle end だとただの "bam" でOK)
 
 args <- commandArgs(trailingOnly = TRUE)
 refSource <- args[1] # コマンドライン引数からrefSourceを取得
@@ -117,7 +166,7 @@ filterTSS(myTSSr, method = "TPM", tpmLow = 0.05)
 
 clusterTSS(myTSSr, method = "peakclu", peakDistance = 100, extensionDistance = 20, 
            localThreshold = 0.02, clusterThreshold = 1, 
-           useMultiCore = TRUE, numCores = 16)
+           useMultiCore = TRUE, numCores = opt$threads)
 
 
 # Aggregating consensus TSS clusters with “consensusCluster” function.
@@ -129,7 +178,7 @@ clusterTSS(myTSSr, method = "peakclu", peakDistance = 100, extensionDistance = 2
 # numCores: Number of cores. Default is NULL
 ##
 
-consensusCluster(myTSSr, dis = 100, useMultiCore = TRUE, numCores = 10)
+consensusCluster(myTSSr, dis = 100, useMultiCore = TRUE, numCores = opt$threads)
 
 
 # export the consensus TCs to txt file
@@ -168,4 +217,4 @@ annotateCluster(myTSSr, clusters = "consensusClusters", filterCluster = TRUE,
 
 exportClustersTable(myTSSr, data = "assigned")
 exportClustersTable(myTSSr, data = "consensusClusters")
-exportClustersToBed(myTSSr, data = "consensusClusters")	# consensusCluster()後の出力ではエラーだが、一通り実行後に再度行うと出力できた(20241026)
+exportClustersToBed(myTSSr, data = "consensusClusters")
