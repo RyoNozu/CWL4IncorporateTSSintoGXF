@@ -231,7 +231,7 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                 if five_prime_utr_start <= five_prime_utr_end:
                     if file_type == "gtf":
                         five_prime_utr_attribute = (
-                            f'gene_id "{gene.iloc[0]["ene_id"]}"; '
+                            f'gene_id "{gene.iloc[0]["gene_id"]}"; '
                             f'Parent "rna-{transcript_id}"; '
                             f'five_prime_utr_id "tss_id-{tss_group.iloc[0]["tss_id"]}"; '
                             f'transcript_id "{transcript_id}"'
