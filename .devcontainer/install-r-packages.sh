@@ -11,6 +11,7 @@ BiocManager::install(c(\"Rsamtools\", \"GenomicRanges\", \"GenomicFeatures\", \"
 
 # Install from GitHub
 # Install required packages with specific versions
+install.packages('optparse', version = '1.7.5')
 install.packages('devtools', version = '2.4.5')
 devtools::install_github(\"Linlab-slu/TSSr\", ref = \"v0.99.1\", build_vignettes = TRUE, force = TRUE)
 

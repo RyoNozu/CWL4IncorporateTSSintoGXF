@@ -1,6 +1,7 @@
+#!/usr/bin/env Rscript
+
 # Install & load packages for TSSr
 
-# install.packages("devtools") # version 2.4.5
 # if (!requireNamespace("BiocManager", quietly = TRUE))
 # install.packages("BiocManager") # version 1.30.25
 # BiocManager::install("Rsamtools") # version 2.20.0
@@ -11,21 +12,25 @@
 # BiocManager::install("DESeq2") # version 1.44.0
 # BiocManager::install("BSgenome") # version 1.72.0
 # BiocManager::install("BSgenomeForge")
-
+# BiocManager::install("txdbmaker")
 # install.packages("data.table") # version 1.16.4
 # install.packages("stringr") # version 1.5.1
+# install.packages('optparse', version = '1.7.5')
+# install.packages('devtools', version = '2.4.5')
 
 # devtools::install_github("Linlab-slu/TSSr", ref = "v0.99.1", build_vignettes = TRUE,force = TRUE) # version 0.99.6
 
 library(TSSr)
 library(optparse)
 
+# Option list
 option_list <- list(
   make_option(
     c("-r", "--refSource"),
     type = "character",
     default = NULL,
-    help="Reference source file (GTF or GFF file)", metavar="FILE"
+    help="Reference source file (GTF or GFF file)", 
+    metavar="FILE"
   ),
   make_option(
     c("-s", "--seedFile"),
@@ -42,7 +47,7 @@ option_list <- list(
     metavar = "INTEGER"
   ),
   make_option(
-    c("-s", "--sizes"),
+    c("--group_sizes"),
     type = "character",
     default = NULL,
     help = "Comma-separated list of file counts for each group (e.g., '3,3,1,1')",
@@ -56,70 +61,198 @@ option_list <- list(
     metavar = "STRING"
   ),
   make_option(
+    c("-d", "--bam_dir"),
+    type = "character",
+    default = "./",
+    help = "Directory containing BAM files (used if --bam_files is not specified)",
+    metavar = "DIRECTORY"
+  ),
+  make_option(
     c("-t", "--threads"),
     type = "integer",
-    default = 10,
+    default = 8,
     help = "Number of threads",
     metavar = "INTEGER"
+  ),
+  make_option(
+    c("-y", "--inputFilesType"),
+    type = "character",
+    default = "bamPairedEnd",
+    help = "Input files type, either 'bamPairedEnd' or 'bam'",
+    metavar = "STRING"
+  ),
+  make_option(
+    c("-o", "--organismName"),
+    type = "character",
+    default = NULL,
+    help = "Full scientific name of the organism (e.g., 'Halichoeres trimaculatus')",
+    metavar = "NAME"
+  ),
+  make_option(
+    c("-b", "--bam_files"),
+    type = "character",
+    default = NULL,
+    help = "Comma-separated list of BAM files. such as 'sample1.bam,sample2.bam,sample3.bam'",
+    metavar = "FILES"
   )
 )
 
+# Parse options, including positional arguments
 opt_parser <- OptionParser(option_list = option_list)
-opt <- parse_args(opt_parser)
+opt <- parse_args(opt_parser, positional_arguments = TRUE)
 
+# Split parsed options and remaining arguments
+parsed_options <- opt$options
+remaining_args <- opt$args
 
+# Process for BAM files
+if (!is.null(parsed_options$bam_files) && parsed_options$bam_files != "") {
+  # カンマ区切りのBAMファイルリストを分割
+  inputFiles <- unlist(strsplit(parsed_options$bam_files, ","))
+  
+  # 存在確認とフルパス変換
+  inputFiles <- sapply(inputFiles, function(f) {
+    if (!file.exists(f) && !startsWith(f, "/")) {
+      f <- file.path(getwd(), f)
+    }
+    if (!file.exists(f)) {
+      warning(paste("File not found:", f))
+    }
+    return(f)
+  })
+} else {
+  # Default: Search for files from the directory
+  inputFiles <- list.files(path = parsed_options$bam_dir, pattern = "Aligned.sortedByCoord.out.bam$", full.names = TRUE)
+}
 
-# generate BSgenome Package for target species
-# This is example case, H. trimaculatus
-# seed file: BSgenome.Htrimaculatus.Htriv1.1-seed.txt
+# Check existence
+if (length(inputFiles) == 0) {
+  stop("BAM files not found. Please specify BAM files after --bam_files or check --bam_dir option.")
+}
 
-BSgenomeForge::forgeBSgenomeDataPkg(opt$seedFile, replace = TRUE)
-devtools::build("BSgenome.Htrimaculatus.inhouse.Htriv1")
-# devtools::check_built("BSgenome.Htrimaculatus.inhouse.Htriv1_1.0.0.tar.gz") # この `check_built` が原因で解析がストップしてしまっていたのでコメントアウト
-devtools::install_local("BSgenome.Htrimaculatus.inhouse.Htriv1_1.0.0.tar.gz")
+# ファイル名でソートする
+cat("Sorting BAM files by filename...\n")
+inputFiles <- sort(inputFiles)
+cat("Sorted input files:\n")
+for (i in 1:length(inputFiles)) {
+  cat(sprintf("%d: %s\n", i, basename(inputFiles[i])))
+}
 
+# シードファイルからパッケージ名を直接抽出する
+extract_package_name_from_seed <- function(seed_file) {
+  lines <- readLines(seed_file, n = 1)  # 最初の行だけ読む
+  if (length(lines) > 0 && grepl("^Package:", lines[1])) {
+    # "Package: XXX" の形式から XXX を抽出
+    return(gsub("^Package:\\s*", "", lines[1]))
+  }
+  return(NULL)
+}
+
+# シードファイルからパッケージ名を取得
+seed_file <- parsed_options$seedFile
+package_name <- extract_package_name_from_seed(seed_file)
+# パッケージ名から生物種名（organism name）を抽出
+organism_name <- sub("^BSgenome\\.([^\\.]+).*$", "\\1", package_name)
+
+if (is.null(package_name)) {
+  # パッケージ名が見つからない場合はファイル名から作成
+  seed_basename <- tools::file_path_sans_ext(basename(seed_file))
+  package_name <- paste0("BSgenome.", seed_basename)
+  organism_name <- seed_basename
+}
+
+# BSgenomeパッケージを生成
+BSgenomeForge::forgeBSgenomeDataPkg(seed_file, replace = TRUE)
+
+# パッケージをビルドしてインストール
+if (dir.exists(package_name)) {
+  # パッケージディレクトリが存在する場合はビルド
+  devtools::build(package_name)
+  # tarballファイル名を取得
+  tarball_files <- list.files(pattern = ".*\\.tar\\.gz$")
+  tarball_file <- grep(package_name, tarball_files, value = TRUE)[1]
+  if (is.na(tarball_file)) {
+    tarball_file <- paste0(package_name, "_1.0.0.tar.gz")
+  }
+  devtools::install_local(tarball_file)
+  
+  # TSSrオブジェクト生成に使用するゲノム名
+  genome_name <- package_name
+} else {
+  stop(paste("BSgenome package directory not found:", package_name))
+}
 
 # Import required files & TSS calling
-# 実行方法: e.g. カレントディレクトリのbamファイルを読み込み, refSource: gtf file, 4 groups, each group has 3, 3, 1, 1 files, prefixes: prefix of each group
-# % Rscript exec_TSSr_combine_step05-08.R "refSource" 4 3 3 1 1 prefix1 prefix2 prefix3 prefix4
+inputFilesType <- parsed_options$inputFilesType
+refSource <- parsed_options$refSource
+group_count <- parsed_options$group_count
 
-inputFiles <- list.files(path = "./out", pattern = "Aligned.sortedByCoord.out.bam$", full.names = TRUE)
-inputFilesType <- "bamPairedEnd"  # set “inputFilesType” as “bamPairedEnd” for paired-end BAM files, and as "TSStable" if the input file is a TSS table (sigle end だとただの "bam" でOK)
+# If group_sizes is given as a string, split it into numbers
+if (!is.null(parsed_options$group_sizes)) {
+  group_sizes <- as.integer(unlist(strsplit(parsed_options$group_sizes, ",")))
+} else {
+  # Default value or determined from arguments
+  # Treat all files as one group
+  group_sizes <- length(inputFiles)
+}
 
-args <- commandArgs(trailingOnly = TRUE)
-refSource <- args[1] # コマンドライン引数からrefSourceを取得
-group_count <- as.integer(args[2]) # コマンドライン引数からグループ数を取得
-group_sizes <- as.integer(args[3:(2 + group_count)]) # コマンドライン引数から各グループのファイル数を取得
-prefixes <- args[(3 + group_count):(2 + 2 * group_count)] # コマンドライン引数から各グループのprefixを取得
+# If prefixes are given as a string, split it into numbers
+if (!is.null(parsed_options$prefixes)) {
+  prefixes <- unlist(strsplit(parsed_options$prefixes, ","))
+} else {
+  # Default prefixes
+  prefixes <- paste0("group", 1:group_count)
+}
 
-### グループごとにファイルを分ける
+# グループ分け処理を修正して詳細なデバッグ情報を出力
+cat("\nGrouping files...\n")
+cat(sprintf("Group count: %d\n", group_count))
+cat(sprintf("Group sizes: %s\n", paste(group_sizes, collapse=", ")))
+cat(sprintf("Prefixes: %s\n", paste(prefixes, collapse=", ")))
+
 start_index <- 1
 group_files <- list()
 for (i in 1:group_count) {
   end_index <- start_index + group_sizes[i] - 1
   group_files[[i]] <- inputFiles[start_index:end_index]
+  
+  # グループ情報の詳細を出力
+  cat(sprintf("\nGroup %d (Prefix: %s, Files: %d):\n", i, prefixes[i], length(group_files[[i]])))
+  for (j in 1:length(group_files[[i]])) {
+    cat(sprintf("  %d: %s\n", j, basename(group_files[[i]][j])))
+  }
+  
   start_index <- end_index + 1
 }
 
-### サンプルラベルを生成
+### Generate sample labels
 sampleLabels <- unlist(lapply(1:group_count, function(i) {
   paste0(prefixes[i], sprintf("%02d", 1:length(group_files[[i]])))
 }))
 
-### mergeIndexを生成
+### Generate mergeIndex
 mergeIndex <- unlist(lapply(1:group_count, function(i) {
   rep(i, length(group_files[[i]]))
 }))
 
+# organism_name変数の設定
+# パラメータから直接取得（優先）、もしくはシードファイルから抽出
+if (!is.null(parsed_options$organismName)) {
+  organism_name <- parsed_options$organismName
+} else {
+  # シードファイルから抽出した値を使用（バックアップ）
+  organism_name <- sub("^BSgenome\\.([^\\.]+).*$", "\\1", package_name)
+}
+
 ### TSSr object generation
-myTSSr <- new("TSSr", genomeName = "BSgenome.Htrimaculatus.inhouse.Htriv1"
+myTSSr <- new("TSSr", genomeName = genome_name
                  ,inputFiles = inputFiles
                  ,inputFilesType = inputFilesType
                  ,sampleLabels = sampleLabels
-                 ,sampleLabelsMerged = paste0("group", 1:group_count)
+                 ,sampleLabelsMerged = prefixes
                  ,mergeIndex = mergeIndex
                  ,refSource = refSource
-                 ,organismName = "Halichoeres trimaculatus")
+                 ,organismName = organism_name)
 
 
 # TSS calling
@@ -151,9 +284,9 @@ filterTSS(myTSSr, method = "poisson")
 filterTSS(myTSSr, method = "TPM", tpmLow = 0.05) 
 
 
-# Clustering TSSs to infer core promoters with “clusterTSS” function
+# Clustering TSSs to infer core promoters with "clusterTSS" function
 
-# The “clusterTSS” function was designed to group neighboring TSSs into distinct TSS clusters (TCs), representing putative core promoters
+# The "clusterTSS" function was designed to group neighboring TSSs into distinct TSS clusters (TCs), representing putative core promoters
 ## options
 # method: peakclu:
 # peakDistance: 
@@ -166,19 +299,19 @@ filterTSS(myTSSr, method = "TPM", tpmLow = 0.05)
 
 clusterTSS(myTSSr, method = "peakclu", peakDistance = 100, extensionDistance = 20, 
            localThreshold = 0.02, clusterThreshold = 1, 
-           useMultiCore = TRUE, numCores = opt$threads)
+           useMultiCore = TRUE, numCores = parsed_options$threads)
 
 
-# Aggregating consensus TSS clusters with “consensusCluster” function.
+# Aggregating consensus TSS clusters with "consensusCluster" function.
 
-# TSSr infers a set of consensus core promoters using the “consensusCluster” function to assign the same ID for TCs belong to the same core promoter
+# TSSr infers a set of consensus core promoters using the "consensusCluster" function to assign the same ID for TCs belong to the same core promoter
 ## options
 # dis: (default: 50) Minimum distance between two peaks to be aggregated together into the same consensus cluster.
 # useMultiCore: Logical indicating whether multiple cores are used or not. Default is FALSE.
 # numCores: Number of cores. Default is NULL
 ##
 
-consensusCluster(myTSSr, dis = 100, useMultiCore = TRUE, numCores = opt$threads)
+consensusCluster(myTSSr, dis = 100, useMultiCore = TRUE, numCores = parsed_options$threads)
 
 
 # export the consensus TCs to txt file
@@ -190,10 +323,10 @@ consensusCluster(myTSSr, dis = 100, useMultiCore = TRUE, numCores = opt$threads)
 
 # Assigning TCs to downstream genes
 
-# Assigning TCs to downstream genes as their core promoters is required for annotation of the 5’ boundaries of genomic features. 
+# Assigning TCs to downstream genes as their core promoters is required for annotation of the 5' boundaries of genomic features. 
 # This process is also a prerequisite for further interrogations of regulated transcription initiation at the gene level. 
-# TSSr offers the “annotateCluster” function to assign TCs to their downstream genes. The assignment of a TC to a gene is 
-# based on the distance between the position of the dominant TSS of a TC and the annotated 5’ends of coding sequences (CDS) or transcripts.
+# TSSr offers the "annotateCluster" function to assign TCs to their downstream genes. The assignment of a TC to a gene is 
+# based on the distance between the position of the dominant TSS of a TC and the annotated 5'ends of coding sequences (CDS) or transcripts.
 ### ### ver: analyze_poisson-TPM005-data_peakDis100_extDis20_localTh002_consDis100_assi5k.RData
 ## options
 # filterCluster: logical, whether to filter out TCs with a low expression level (default: TRUE)

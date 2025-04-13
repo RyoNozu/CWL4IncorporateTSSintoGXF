@@ -164,3 +164,27 @@ python3 10_draft_update_gtf_add_all.assignedClusters_TSS-feature_v20250403-01.py
 
 - これもできたらやる
 - ワークフローとして別々に作ってもいいかも
+
+&nbsp;
+
+&nbsp;
+
+### Rscriptの修正
+
+- CWLでも実行できるように`optparse` を使用した方法に変更
+- BAMファイルは `,`ですべてのファイルを渡すようにすることで対応
+- おそらくCWLでも `itemSeparator` を使用してarrayになっているファイル一覧をつなげられると考えられる
+- [./scripts/05-08_combined_exec_TSSr_modified.R](./scripts/05-08_combined_exec_TSSr_modified.R) に変更
+
+```bash
+Rscript ./scripts/05-08_combined_exec_TSSr_modified.R \
+--refSource ./Data/Halichoeres_trimaculatus/braker_correctID_v3.gtf \
+--seedFile ./Data/Halichoeres_trimaculatus/BSgenome.Htrimaculatus.Htriv1.1-seed_2.txt \
+--group_count 2 \
+--group_sizes 1,1 \
+--prefixes A,B \
+--threads 16 \
+--inputFilesType bamPairedEnd \
+--organismName Halichoeres trimaculatus \
+--bam_files ./MK.F1_R1_trim.fq_Aligned.sortedByCoord.out.bam,./MK.F1.Mix_R1_trim.fq_Aligned.sortedByCoord.out.bam 
+```

@@ -1,8 +1,8 @@
 #!/usr/bin/env cwl-runner
 cwlVersion: v1.2
 class: CommandLineTool
-label: "make star index"
-doc: "create star index for reference genome (STAR version 2.7.11b)"
+label: "make star index (GFF3 format)"
+doc: "create star index for reference genome using GFF3 format (STAR version 2.7.11b) see https://physiology.med.cornell.edu/faculty/skrabanek/lab/angsd/lecture_notes/STARmanual.pdf#page=22.26"
 requirements:
   ShellCommandRequirement: {}
 
