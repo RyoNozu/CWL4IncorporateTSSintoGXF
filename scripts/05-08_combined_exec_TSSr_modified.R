@@ -40,27 +40,6 @@ option_list <- list(
     metavar = "FILE"
   ),
   make_option(
-    c("-g", "--group_count"),
-    type = "integer",
-    default = 1,
-    help = "Number of groups",
-    metavar = "INTEGER"
-  ),
-  make_option(
-    c("--group_sizes"),
-    type = "character",
-    default = NULL,
-    help = "Comma-separated list of file counts for each group (e.g., '3,3,1,1')",
-    metavar = "STRING"
-  ),
-  make_option(
-    c("-p", "--prefixes"),
-    type = "character",
-    default = NULL,
-    help = "Comma-separated list of prefixes for each group (e.g., 'prefix1,prefix2,prefix3,prefix4')",
-    metavar = "STRING"
-  ),
-  make_option(
     c("-d", "--bam_dir"),
     type = "character",
     default = "./",
@@ -94,6 +73,13 @@ option_list <- list(
     default = NULL,
     help = "Comma-separated list of BAM files. such as 'sample1.bam,sample2.bam,sample3.bam'",
     metavar = "FILES"
+  ),
+  make_option(
+    c("-m", "--metadata"),
+    type = "character",
+    default = NULL,
+    help = "Path to CSV metadata file defining sample groups (required)",
+    metavar = "FILE"
   )
 )
 
@@ -130,10 +116,8 @@ if (length(inputFiles) == 0) {
   stop("BAM files not found. Please specify BAM files after --bam_files or check --bam_dir option.")
 }
 
-# ファイル名でソートする
-cat("Sorting BAM files by filename...\n")
-inputFiles <- sort(inputFiles)
-cat("Sorted input files:\n")
+# 入力ファイル一覧を表示
+cat("Input BAM files found:\n")
 for (i in 1:length(inputFiles)) {
   cat(sprintf("%d: %s\n", i, basename(inputFiles[i])))
 }
@@ -185,45 +169,130 @@ if (dir.exists(package_name)) {
 # Import required files & TSS calling
 inputFilesType <- parsed_options$inputFilesType
 refSource <- parsed_options$refSource
-group_count <- parsed_options$group_count
 
-# If group_sizes is given as a string, split it into numbers
-if (!is.null(parsed_options$group_sizes)) {
-  group_sizes <- as.integer(unlist(strsplit(parsed_options$group_sizes, ",")))
-} else {
-  # Default value or determined from arguments
-  # Treat all files as one group
-  group_sizes <- length(inputFiles)
+# メタデータファイルが指定されていなければエラー
+if (is.null(parsed_options$metadata)) {
+  stop("Error: Metadata file (--metadata) is required. Please provide a CSV file with sample_id and prefix columns.")
 }
 
-# If prefixes are given as a string, split it into numbers
-if (!is.null(parsed_options$prefixes)) {
-  prefixes <- unlist(strsplit(parsed_options$prefixes, ","))
-} else {
-  # Default prefixes
-  prefixes <- paste0("group", 1:group_count)
+# メタデータファイルが存在するか確認
+if (!file.exists(parsed_options$metadata)) {
+  stop(paste("Error: Metadata file not found:", parsed_options$metadata))
 }
 
-# グループ分け処理を修正して詳細なデバッグ情報を出力
-cat("\nGrouping files...\n")
-cat(sprintf("Group count: %d\n", group_count))
-cat(sprintf("Group sizes: %s\n", paste(group_sizes, collapse=", ")))
-cat(sprintf("Prefixes: %s\n", paste(prefixes, collapse=", ")))
+# メタデータファイルを読み込む
+cat("Using metadata file for grouping:", parsed_options$metadata, "\n")
+metadata <- read.csv(parsed_options$metadata, stringsAsFactors = FALSE)
 
-start_index <- 1
-group_files <- list()
+# メタデータファイルの形式を検証
+if (!all(c("sample_id", "prefix") %in% colnames(metadata))) {
+  stop("Error: Metadata file must contain 'sample_id' and 'prefix' columns.")
+}
+
+# プレフィックスの一覧を取得（重複を削除）
+unique_prefixes <- unique(metadata$prefix)
+group_count <- length(unique_prefixes)
+prefixes <- unique_prefixes
+
+cat(sprintf("Detected %d groups from metadata:\n", group_count))
 for (i in 1:group_count) {
-  end_index <- start_index + group_sizes[i] - 1
-  group_files[[i]] <- inputFiles[start_index:end_index]
+  cat(sprintf("  Group %d: %s\n", i, prefixes[i]))
+}
+
+# BAMファイルをグループに分類（空のグループも保持）
+group_files <- vector("list", group_count)
+names(group_files) <- prefixes
+
+# BAMファイルの使用状況を追跡
+used_bams <- character(0)
+
+for (i in 1:group_count) {
+  # 現在のグループに属するサンプルIDを取得
+  current_prefix <- prefixes[i]
+  samples_in_group <- metadata$sample_id[metadata$prefix == current_prefix]
   
-  # グループ情報の詳細を出力
-  cat(sprintf("\nGroup %d (Prefix: %s, Files: %d):\n", i, prefixes[i], length(group_files[[i]])))
-  for (j in 1:length(group_files[[i]])) {
-    cat(sprintf("  %d: %s\n", j, basename(group_files[[i]][j])))
+  cat(sprintf("\nProcessing Group %d (Prefix: %s)\n", i, current_prefix))
+  cat(sprintf("  Samples in this group: %s\n", paste(samples_in_group, collapse=", ")))
+  
+  # このグループのBAMファイルを検索
+  group_bams <- c()
+  for (sample_id in samples_in_group) {
+    # 完全一致に近いパターンマッチング - サンプルIDの前に境界または/があり、後ろに_R1などが続く
+    pattern <- paste0("(^|/|[^A-Za-z0-9\\.])(", gsub("\\.", "\\\\.", sample_id), ")(_|$)")
+    
+    # デバッグ出力
+    cat(sprintf("  Looking for pattern: %s\n", pattern))
+    
+    # 未使用のBAMファイルからマッチするものを検索
+    available_bams <- setdiff(inputFiles, used_bams)
+    matching_indices <- grep(pattern, available_bams)
+    matching_bams <- available_bams[matching_indices]
+    
+    if (length(matching_bams) > 0) {
+      cat(sprintf("  Found %d BAM file(s) for sample %s:\n", length(matching_bams), sample_id))
+      for (bam in matching_bams) {
+        cat(sprintf("    %s\n", basename(bam)))
+      }
+      group_bams <- c(group_bams, matching_bams)
+      used_bams <- c(used_bams, matching_bams)  # 使用済みとしてマーク
+    } else {
+      cat(sprintf("  WARNING: No BAM files found for sample %s\n", sample_id))
+    }
   }
   
-  start_index <- end_index + 1
+  # 空でも全てのグループを保持
+  group_files[[i]] <- group_bams
+  
+  # ファイルが見つからなかった場合は警告
+  if (length(group_bams) == 0) {
+    warning(sprintf("WARNING: No BAM files found for group %d (%s)", i, current_prefix))
+  }
 }
+
+# 重複ファイルがないか確認
+total_files <- sum(sapply(group_files, length))
+if (total_files != length(unique(unlist(group_files)))) {
+  warning("WARNING: Some BAM files appear to be assigned to multiple groups. Check the sample ID patterns in metadata.")
+}
+
+# group_sizesを計算
+group_sizes <- sapply(group_files, length)
+
+# 空のグループがあるか確認
+empty_groups <- which(group_sizes == 0)
+if (length(empty_groups) > 0) {
+  warning(sprintf("WARNING: The following groups have no BAM files: %s", 
+                 paste(paste0(empty_groups, " (", prefixes[empty_groups], ")"), collapse=", ")))
+}
+
+# 少なくとも1つのグループにBAMファイルがあるか確認
+if (all(group_sizes == 0)) {
+  stop("ERROR: No BAM files found for any group. Please check your metadata and BAM file names.")
+}
+
+# 空のグループがある場合、実行可能なグループだけを保持
+if (length(empty_groups) > 0) {
+  # ユーザーに空のグループを除外することを通知
+  cat("\nRemoving empty groups from processing...\n")
+  
+  # 有効なグループのみを保持
+  valid_groups <- which(group_sizes > 0)
+  group_files <- group_files[valid_groups]
+  prefixes <- prefixes[valid_groups]
+  group_count <- length(valid_groups)
+  group_sizes <- group_sizes[valid_groups]
+  
+  cat(sprintf("Continuing with %d valid groups: %s\n", 
+             group_count, paste(prefixes, collapse=", ")))
+}
+
+# 全BAMファイルをフラット化
+inputFiles <- unlist(group_files)
+
+cat("\nSummary of groups based on metadata:\n")
+cat(sprintf("Total groups: %d\n", group_count))
+cat(sprintf("Group sizes: %s\n", paste(group_sizes, collapse=", ")))
+cat(sprintf("Prefixes: %s\n", paste(prefixes, collapse=", ")))
 
 ### Generate sample labels
 sampleLabels <- unlist(lapply(1:group_count, function(i) {
