@@ -188,3 +188,52 @@ Rscript ./scripts/05-08_combined_exec_TSSr_modified.R \
 --organismName Halichoeres trimaculatus \
 --bam_files ./MK.F1_R1_trim.fq_Aligned.sortedByCoord.out.bam,./MK.F1.Mix_R1_trim.fq_Aligned.sortedByCoord.out.bam 
 ```
+
+&nbsp;
+
+&nbsp;
+
+## 20250413
+
+- RscriptをCWLで実行することを見据えて改造
+- metadataを与えてグループにするBEDファイルを明示的に指定
+
+```bash
+Rscript ./scripts/05-08_combined_exec_TSSr_modified.R \
+--refSource ./Data/Halichoeres_trimaculatus/braker_correctID_v3.gtf \
+--seedFile ./Data/Halichoeres_trimaculatus/BSgenome.Htrimaculatus.Htriv1.1-seed_2.txt \
+--threads 16 \
+--inputFilesType bamPairedEnd \
+--organismName Halichoeres trimaculatus \
+--bam_dir ./out \
+--metadata ./Data/Halichoeres_trimaculatus/sample_metadata.csv
+```
+
+&nbsp;
+
+- 途中まで実行してみてBAMファイルを直接指定するバージョンでも実行できそうなので、途中で中断し、このパターンでCWL化に進む
+
+```bash
+Rscript ./scripts/05-08_combined_exec_TSSr_modified.R \
+--refSource ./Data/Halichoeres_trimaculatus/braker_correctID_v3.gtf \
+--seedFile ./Data/Halichoeres_trimaculatus/BSgenome.Htrimaculatus.Htriv1.1-seed_2.txt \
+--threads 16 \
+--inputFilesType bamPairedEnd \
+--organismName Halichoeres trimaculatus \
+--metadata ./Data/Halichoeres_trimaculatus/sample_metadata.csv \
+--bam_files ./out/MK.F1_R1_trim.fq_Aligned.sortedByCoord.out.bam,./out/MK.F1.Mix_R1_trim.fq_Aligned.sortedByCoord.out.bam,./out/MK.F2_R1_trim.fq_Aligned.sortedByCoord.out.bam,./out/MK.F3_R1_trim.fq_Aligned.sortedByCoord.out.bam,./out/MK.F4_R1_trim.fq_Aligned.sortedByCoord.out.bam,./out/MK.M1_R1_trim.fq_Aligned.sortedByCoord.out.bam,./out/MK.M1.Mix_R1_trim.fq_Aligned.sortedByCoord.out.bam,./out/MK.M2_R1_trim.fq_Aligned.sortedByCoord.out.bam,./out/MK.M3_R1_trim.fq_Aligned.sortedByCoord.out.bam,./out/MK.M4_R1_trim.fq_Aligned.sortedByCoord.out.bam
+
+```
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
+## 20250414
+
+- [./Tools/06_combined_exec_TSSr.cwl](./Tools/06_combined_exec_TSSr.cwl) での実行が完了
+- 今のところ実行はうまくいっていない

@@ -23,6 +23,12 @@
 library(TSSr)
 library(optparse)
 
+# カスタムライブラリパスの設定
+temp_lib <- file.path(tempdir(), "R_libs")
+dir.create(temp_lib, recursive = TRUE, showWarnings = FALSE)
+# システムのデフォルトライブラリパスより前に一時ディレクトリを配置
+.libPaths(c(temp_lib, .libPaths()))
+
 # Option list
 option_list <- list(
   make_option(
@@ -80,6 +86,34 @@ option_list <- list(
     default = NULL,
     help = "Path to CSV metadata file defining sample groups (required)",
     metavar = "FILE"
+  ),
+  make_option(
+    c("-g", "--genome_seqs_dir"),
+    type = "character",
+    default = "./out/seqs_by_scaffold",
+    help = "Directory containing split genome sequences for BSgenome package",
+    metavar = "DIRECTORY"
+  ),
+  make_option(
+    c("-u", "--upstream"),
+    type = "integer",
+    default = 5000,
+    help = "Distance upstream of the TSS to be considered for annotation",
+    metavar = "INTEGER"
+  ),
+  make_option(
+    c("-w", "--downstream"),
+    type = "integer",
+    default = 0,
+    help = "Downstream distance to the start position of annotation feature",
+    metavar = "INTEGER"
+  ),
+  make_option(
+    c("-a", "--annotationType"),
+    type = "character",
+    default = "genes",
+    help = "Type of genomic features to be annotated (either 'genes' or 'transcripts')",
+    metavar = "STRING"
   )
 )
 
@@ -145,8 +179,33 @@ if (is.null(package_name)) {
   organism_name <- seed_basename
 }
 
-# BSgenomeパッケージを生成
-BSgenomeForge::forgeBSgenomeDataPkg(seed_file, replace = TRUE)
+# カスタムのシーケンスディレクトリを使用するように修正
+seqs_dir <- parsed_options$genome_seqs_dir
+if (!is.null(seqs_dir) && dir.exists(seqs_dir)) {
+  cat(sprintf("Using custom genome sequences directory: %s\n", seqs_dir))
+  # シードファイルを一時的に修正してseqs_srcdirを更新
+  temp_seed_file <- tempfile(fileext = ".seed")
+  seed_content <- readLines(seed_file)
+  # seqs_srcdir行を検索して置換
+  seqs_srcdir_line <- grep("^seqs_srcdir", seed_content)
+  if (length(seqs_srcdir_line) > 0) {
+    seed_content[seqs_srcdir_line] <- paste0("seqs_srcdir: ", seqs_dir)
+  } else {
+    # 行がない場合は追加
+    seed_content <- c(seed_content, paste0("seqs_srcdir: ", seqs_dir))
+  }
+  writeLines(seed_content, temp_seed_file)
+  
+  # 一時ファイルをシードとして使用
+  BSgenomeForge::forgeBSgenomeDataPkg(temp_seed_file, replace = TRUE)
+  
+  # 一時ファイルを削除
+  unlink(temp_seed_file)
+} else {
+  # 既存の方法でパッケージを生成
+  cat("Using default genome sequences directory from seed file\n")
+  BSgenomeForge::forgeBSgenomeDataPkg(seed_file, replace = TRUE)
+}
 
 # パッケージをビルドしてインストール
 if (dir.exists(package_name)) {
@@ -158,7 +217,9 @@ if (dir.exists(package_name)) {
   if (is.na(tarball_file)) {
     tarball_file <- paste0(package_name, "_1.0.0.tar.gz")
   }
-  devtools::install_local(tarball_file)
+  
+  # 一時ディレクトリにインストール
+  install.packages(tarball_file, repos = NULL, type = "source", lib = temp_lib)
   
   # TSSrオブジェクト生成に使用するゲノム名
   genome_name <- package_name
@@ -408,8 +469,9 @@ consensusCluster(myTSSr, dis = 100, useMultiCore = TRUE, numCores = parsed_optio
 ##
 
 annotateCluster(myTSSr, clusters = "consensusClusters", filterCluster = TRUE, 
-                filterClusterThreshold = 0.02, annotationType = "genes", 
-                upstream = 5000, upstreamOverlap = 500, downstream = 0)
+                filterClusterThreshold = 0.02, annotationType = parsed_options$annotationType,
+                upstream = parsed_options$upstream, upstreamOverlap = 500, 
+                downstream = parsed_options$downstream)
 
 
 # Export the annotated TCs in each group to txt files
@@ -417,6 +479,6 @@ annotateCluster(myTSSr, clusters = "consensusClusters", filterCluster = TRUE,
 # exported files prefix is each "sampleLabels"
 # e.g. "sampleLabels".assignedClusters.txt
 
-exportClustersTable(myTSSr, data = "assigned")
 exportClustersTable(myTSSr, data = "consensusClusters")
 exportClustersToBed(myTSSr, data = "consensusClusters")
+exportClustersTable(myTSSr, data = "assigned") # 最後に持ってくる

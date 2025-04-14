@@ -23,5 +23,8 @@ RUN apt-get update && apt-get -y upgrade && apt-get install -y --no-install-reco
 COPY install-r-packages.sh /tmp/
 RUN chmod +x /tmp/install-r-packages.sh && /tmp/install-r-packages.sh
 
+ENV R_LIBS_USER=/home/rstudio/R/library
+RUN mkdir -p /home/rstudio/R/library && chmod 777 -R /home/rstudio/R
+
 # 作業ディレクトリの設定
 WORKDIR /work

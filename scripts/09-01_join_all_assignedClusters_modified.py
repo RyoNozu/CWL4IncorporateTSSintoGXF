@@ -50,7 +50,7 @@ def main():
             sorted_dataframes.append(df_sorted)
             print(f"File '{file}' sorted successfully. First 5 rows of sorted data:")
             print(df_sorted.head())
-        except Exception as e:
+        except (pd.errors.ParserError, IOError, ValueError, KeyError) as e:
             print(f"Error processing file '{file}': {e}")
             sys.exit(1)
 
@@ -64,7 +64,7 @@ def main():
         merged_df.fillna("NA", inplace=True)
         print("All files merged successfully. First 5 rows of merged data:")
         print(merged_df.head())
-    except Exception as e:
+    except (ValueError, KeyError, IndexError) as e: # if the files are not mergeable, raise an error
         print(f"Error during merging: {e}")
         sys.exit(1)
 
@@ -73,7 +73,7 @@ def main():
     try:
         merged_df.to_csv(output_file, sep="\t", index=False)
         print(f"Merged data saved to '{output_file}'")
-    except Exception as e:
+    except IOError as e: # if the file is not writable
         print(f"Error saving merged data to file: {e}")
         sys.exit(1)
 
