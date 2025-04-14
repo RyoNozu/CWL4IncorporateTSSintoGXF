@@ -19,6 +19,7 @@
 # install.packages('devtools', version = '2.4.5')
 
 # devtools::install_github("Linlab-slu/TSSr", ref = "v0.99.1", build_vignettes = TRUE,force = TRUE) # version 0.99.6
+# devtools::install_github("RyoNozu/TSSr", build_vignettes = TRUE,force = TRUE)
 
 library(TSSr)
 library(optparse)

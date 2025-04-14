@@ -1,0 +1,13 @@
+assigned_clusters_files:
+  - class: File
+    format: edam:format_3671 # text
+    location: ../../out/MK_F_Mix_samples.assignedClusters.txt
+  - class: File
+    format: edam:format_3671 # text
+    location: ../../out/MK_F_samples.assignedClusters.txt
+  - class: File
+    format: edam:format_3671 # text
+    location: ../../out/MK_M_Mix_samples.assignedClusters.txt
+  - class: File
+    format: edam:format_3671 # text
+    location: ../../out/MK_M_samples.assignedClusters.txt

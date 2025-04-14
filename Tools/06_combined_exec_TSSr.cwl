@@ -100,13 +100,13 @@ inputs:
   - id: annotation_region_upstream
     type: int
     label: "annotation region upstream"
-    doc: "annotation region upstream"
+    doc: "The maximum allowable distance for assigning a dominant TSS (transcription start site) to its downstream gene, when the TSS is located upstream of 5'-end of the CDS or the the transcript. Default: 1000 bp"
     default: 1000
 
   - id: annotation_region_downstream
     type: int
     label: "annotation region downstream"
-    doc: "annotation region downstream"
+    doc: "The maximum allowable distance for assigning a TSS when the dominant TSS is located downstream of 5'-end of the CDS or the the transcript. Default: 0 (i.e., TSSs located downstream of the 5'-end of feature (CDS or transcript) are not assigned to the gene)"
     default: 0
 
   - id: annotation_type

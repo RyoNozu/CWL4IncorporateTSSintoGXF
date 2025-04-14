@@ -236,4 +236,51 @@ Rscript ./scripts/05-08_combined_exec_TSSr_modified.R \
 ## 20250414
 
 - [./Tools/06_combined_exec_TSSr.cwl](./Tools/06_combined_exec_TSSr.cwl) での実行が完了
-- 今のところ実行はうまくいっていない
+- 一応出力まで確認
+- [./Tools/07_join_all_assignedClusters.cwl](./Tools/07_join_all_assignedClusters.cwl)での実行が完了
+- 参考にRscriptの実行コマンドを掲載
+
+&nbsp;
+
+```bash
+Rscript ./scripts/05-08_combined_exec_TSSr_modified.R \
+--refSource ./Data/Halichoeres_trimaculatus/braker_correctID_v3.gtf \
+--seedFile ./Data/Halichoeres_trimaculatus/BSgenome.Htrimaculatus.Htriv1.1-seed_2.txt \
+--threads 16 \
+--inputFilesType bamPairedEnd \
+--organismName Halichoeres trimaculatus \
+--metadata ./Data/Halichoeres_trimaculatus/sample_metadata.csv \
+--upstream 1000 \
+--downstream 0 \
+--annotationType genes \
+--bam_files ./out/MK.F1_R1_trim.fq_Aligned.sortedByCoord.out.bam,./out/MK.F1.Mix_R1_trim.fq_Aligned.sortedByCoord.out.bam,./out/MK.F2_R1_trim.fq_Aligned.sortedByCoord.out.bam,./out/MK.F3_R1_trim.fq_Aligned.sortedByCoord.out.bam,./out/MK.F4_R1_trim.fq_Aligned.sortedByCoord.out.bam,./out/MK.M1_R1_trim.fq_Aligned.sortedByCoord.out.bam,./out/MK.M1.Mix_R1_trim.fq_Aligned.sortedByCoord.out.bam,./out/MK.M2_R1_trim.fq_Aligned.sortedByCoord.out.bam,./out/MK.M3_R1_trim.fq_Aligned.sortedByCoord.out.bam,./out/MK.M4_R1_trim.fq_Aligned.sortedByCoord.out.bam
+```
+
+&nbsp;
+
+```bash
+cwltool --debug --outdir ./out/ ./Tools/06_combined_exec_TSSr.cwl ./config/Commandlinetool_config/06_tssr_config.yaml
+cwltool --outdir ./out/ ./Tools/07_join_all_assignedClusters.cwl ./config/Commandlinetool_config/07_join_all_assignedClusters.yml 
+```
+
+&nbsp;
+
+### TSSrの改良について
+
+- 野津さんが現在TSSrの改良を進めている
+- [RyoNozu/TSSr](https://github.com/RyoNozu/TSSr) 
+- まだコンテナ化していないが、もしかしたら後日するかも
+
+&nbsp;
+
+### 今後の展望
+
+- 明日サブワークフローを構築、できたらメインのワークフローに統合
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
