@@ -492,7 +492,8 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
             min_distance = min(tss_to_exon_distance.values())
 
             # 最小値を持つすべての transcript_id を取得
-            closest_transcripts = [tid for tid, distance in tss_to_exon_distance.items() if distance == min_distance]
+            if not min_distance:
+                closest_transcripts = [tid for tid, distance in tss_to_exon_distance.items() if distance == min_distance]
 
             # 最小値を持つすべての transcript_id に対して処理を実行
             for transcript_id in closest_transcripts:
