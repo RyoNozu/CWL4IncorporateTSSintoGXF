@@ -284,3 +284,9 @@ cwltool --outdir ./out/ ./Tools/07_join_all_assignedClusters.cwl ./config/Comman
 &nbsp;
 
 &nbsp;
+
+## 20250415 memo by yonezawa
+
+### TSSr のDocker image
+
+- 1.0.2 からは野津さんが修正したTSSr (https://github.com/RyoNozu/TSSr) を実行するように変更

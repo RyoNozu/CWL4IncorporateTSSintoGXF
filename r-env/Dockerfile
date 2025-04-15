@@ -20,8 +20,8 @@ RUN apt-get update && apt-get -y upgrade && apt-get install -y --no-install-reco
     pandoc
 
 # R パッケージのインストール
-COPY install-r-packages.sh /tmp/
-RUN chmod +x /tmp/install-r-packages.sh && /tmp/install-r-packages.sh
+COPY install-r-packages_v2.sh /tmp/
+RUN chmod +x /tmp/install-r-packages_v2.sh && /tmp/install-r-packages_v2.sh
 
 ENV R_LIBS_USER=/home/rstudio/R/library
 RUN mkdir -p /home/rstudio/R/library && chmod 777 -R /home/rstudio/R

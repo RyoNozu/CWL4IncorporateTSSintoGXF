@@ -23,7 +23,7 @@ genome_seqs_dir:
 
 annotation_region_upstream: 1000
 annotation_region_downstream: 0
-annotation_type: "genes"
+annotation_type: "transcripts"
 
 # bamファイル配列の指定方法
 bam_files:

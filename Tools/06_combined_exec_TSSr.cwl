@@ -153,7 +153,7 @@ outputs:
 hints:
   - class: DockerRequirement
     # original Docker image: https://hub.docker.com/r/sorayone56/tssr-r-env
-    dockerPull: sorayone56/tssr-r-env:1.0.1
+    dockerPull: sorayone56/tssr-r-env:1.0.2
 
 
 $namespaces:
