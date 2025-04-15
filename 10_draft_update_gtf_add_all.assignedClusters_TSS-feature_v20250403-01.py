@@ -61,9 +61,9 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
 
     # gene_idとtranscript_idを抽出
     gtf_df['gene_id'] = extract_gene_id(gtf_df['attribute'], file_type)
-    print(gtf_df[['gene_id', 'attribute']].head(75))
+    ### print(gtf_df[['gene_id', 'attribute']].head(75))
     gtf_df['transcript_id'] = extract_transcript_id(gtf_df['attribute'], file_type)
-    print(gtf_df[['transcript_id', 'attribute']].head(75))
+    ### print(gtf_df[['transcript_id', 'attribute']].head(75))
 
     # デバッグ: gene_id の確認
     print("TSS gene IDs:", tss_df['gene_id'].unique())
@@ -86,8 +86,8 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
     if not missing_gene_id_rows.empty:
         print("\nRows without gene_id:")
         print(missing_gene_id_rows)
-    else:
-        print("\nAll rows contain gene_id.")
+    ### else:
+    ###     print("\nAll rows contain gene_id.")
 
     # gene_group に含まれなかった行を抽出
     processed_gene_ids = tss_gene_ids  # 処理対象の gene_id
@@ -95,13 +95,13 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
     unprocessed_rows = gtf_df[~gtf_df['gene_id'].isin(processed_gene_ids)]
 
     # 必要に応じてファイルに出力
-    processed_rows_output_file = "processed_rows_debug_output.tsv"
-    processed_rows.to_csv(processed_rows_output_file, sep='\t', index=False)
-    print(f"Processed rows have been written to {processed_rows_output_file}")
+    ### processed_rows_output_file = "processed_rows_debug_output.tsv"
+    ### processed_rows.to_csv(processed_rows_output_file, sep='\t', index=False)
+    ### print(f"Processed rows have been written to {processed_rows_output_file}")
     # 必要に応じてファイルに出力
-    unprocessed_rows_output_file = "unprocessed_rows_debug_output.tsv"
-    unprocessed_rows.to_csv(unprocessed_rows_output_file, sep='\t', index=False)
-    print(f"Unprocessed rows have been written to {unprocessed_rows_output_file}")
+    ### unprocessed_rows_output_file = "unprocessed_rows_debug_output.tsv"
+    ### unprocessed_rows.to_csv(unprocessed_rows_output_file, sep='\t', index=False)
+    ### print(f"Unprocessed rows have been written to {unprocessed_rows_output_file}")
 
     # 更新の対象とる行を予め unchanged_gtf に追加し、最終的に更新行のindexを使って削除
     for idx, row in processed_rows.iterrows():
@@ -196,7 +196,7 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
 
                 # exon の更新処理
                 related_exons = exons[exons['attribute'].str.contains(
-                    rf'transcript_id[ =]"?{transcript_id}"?', regex=True
+                    rf'\btranscript_id[ =]"?{re.escape(transcript_id)}"?\b', regex=True
                 )]
                 if tss_pos < cds[cds['transcript_id'] == transcript_id]['start'].min():
                     # start が最小の exon を取得
@@ -351,7 +351,7 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
 
                 # exon の更新処理
                 related_exons = exons[exons['attribute'].str.contains(
-                    rf'transcript_id[ =]"?{transcript_id}"?', regex=True
+                    rf'\btranscript_id[ =]"?{re.escape(transcript_id)}"?\b', regex=True
                 )]
                 if tss_pos > cds[cds['transcript_id'] == transcript_id]['end'].max():
                     # end が最大の exon を取得
@@ -478,6 +478,7 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
             # 各transcriptのCDS開始点または終了点を取得し、TSSとの距離を計算
             tss_to_exon_distance = {}  # 修正: transcript_distances → tss_to_cds_distance
             for transcript_id in transcript_ids:
+                print(f"Processing transcript_id: {transcript_id}")
                 transcript_exon = exons[exons['transcript_id'] == transcript_id]
                 if transcript_exon.empty:
                     continue
@@ -560,7 +561,7 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
 
                     # exon の更新処理
                     related_exons = exons[exons['attribute'].str.contains(
-                        rf'transcript_id[ =]"?{transcript_id}"?', regex=True
+                        rf'\btranscript_id[ =]"?{re.escape(transcript_id)}"?\b', regex=True
                     )]
                     if not related_exons.empty:
                         if tss_pos < cds[cds['transcript_id'] == transcript_id]['start'].min():
@@ -745,7 +746,7 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                     # exon の更新処理を追加
                     # 選択された transcript_id に関連する exon を取得
                     related_exons = exons[exons['attribute'].str.contains(
-                        rf'transcript_id[ =]"?{transcript_id}"?', regex=True
+                        rf'\btranscript_id[ =]"?{re.escape(transcript_id)}"?\b', regex=True
                     )]
                     if not related_exons.empty:
                         if tss_pos > cds[cds['transcript_id'] == transcript_id]['end'].max():
@@ -892,9 +893,9 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
         unchanged_gtf_df = pd.DataFrame(unchanged_gtf)
         if 'original_index' in unchanged_gtf_df.columns:
             unchanged_gtf_df = unchanged_gtf_df.sort_values(by=['original_index'], ascending=True)
-        unchanged_gtf_output_file = "unchanged_gtf_debug_output.tsv"
-        unchanged_gtf_df.to_csv(unchanged_gtf_output_file, sep='\t', index=False)
-        print(f"Unchanged GTF data has been written to {unchanged_gtf_output_file}")
+        ### unchanged_gtf_output_file = "unchanged_gtf_debug_output.tsv"
+        ### unchanged_gtf_df.to_csv(unchanged_gtf_output_file, sep='\t', index=False)
+        ### print(f"Unchanged GTF data has been written to {unchanged_gtf_output_file}")
     except Exception as e:
         print(f"Error while writing unchanged_gtf to file: {e}")
         raise
@@ -904,9 +905,9 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
         updated_gtf_df = pd.DataFrame(updated_gtf)
         if 'original_index' in updated_gtf_df.columns:
             updated_gtf_df = updated_gtf_df.sort_values(by=['original_index'], ascending=True)
-        updated_gtf_output_file = "updated_gtf_debug_output.tsv"
-        updated_gtf_df.to_csv(updated_gtf_output_file, sep='\t', index=False)
-        print(f"Updated GTF data has been written to {updated_gtf_output_file}")
+        ### updated_gtf_output_file = "updated_gtf_debug_output.tsv"
+        ### updated_gtf_df.to_csv(updated_gtf_output_file, sep='\t', index=False)
+        ### print(f"Updated GTF data has been written to {updated_gtf_output_file}")
     except Exception as e:
         print(f"Error while writing updated_gtf to file: {e}")
         raise
@@ -926,7 +927,7 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
     if 'original_index' in final_gtf_df.columns and 'feature' in final_gtf_df.columns:
         try:
             # feature列のカスタム順序を設定
-            feature_order = ['region', 'gene', 'pseudogene', 'transcript', 'mRNA', 'lnc_RNA', 'tRNA', 'miRNA', 'primary_transcript', 'rRNA', 
+            feature_order = ['region', 'chromosome', 'gene', 'pseudogene', 'transcript', 'mRNA', 'lnc_RNA', 'tRNA', 'miRNA', 'primary_transcript', 'rRNA', 
                             'exon', 'intron', 'CDS', 'TSS', 'five_prime_UTR', 'three_prime_UTR', 'start_codon', 'stop_codon', 
                             'V_gene_segment', 'C_gene_segment', 'RNase_P_RNA', 'antisense_RNA', 'match', 'cDNA_match']
             final_gtf_df['feature'] = pd.Categorical(final_gtf_df['feature'], categories=feature_order, ordered=True)
@@ -991,9 +992,9 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
             print(missing_rows)
 
             # 必要に応じてファイルに出力
-            missing_rows_output_file = "missing_features_debug_output.tsv"
-            missing_rows.to_csv(missing_rows_output_file, sep='\t', index=False)
-            print(f"Missing feature rows have been written to {missing_rows_output_file}")
+            ### missing_rows_output_file = "missing_features_debug_output.tsv"
+            ### missing_rows.to_csv(missing_rows_output_file, sep='\t', index=False)
+            ### print(f"Missing feature rows have been written to {missing_rows_output_file}")
         except Exception as e:
             print(f"Error while summarizing feature counts or extracting missing rows: {e}")
             raise
