@@ -7,10 +7,13 @@ df = pd.read_csv(input_file, sep="\t", header=0)
 # 一時出力ファイル用のデータフレームを作成
 output_rows = []
 
+# 'tags.dominant_tss' を含む列を動的に取得（接尾語 '_dup' を含む列も対象）
+group_columns = [col for col in df.columns if 'tags.dominant_tss' in col]
+
 # 各行を処理
 for index, row in df.iterrows():
-    # 1st, 2nd groupの 'tags.dominant_tss' を比較
-    group_values = row[[7, 19]]  # 1st group: 7, 2nd group: 19
+    # 動的に取得したグループ列を使用して比較
+    group_values = row[group_columns]
 
     # NAがあれば0に置き換え
     group_values = group_values.fillna(0)
@@ -22,8 +25,8 @@ for index, row in df.iterrows():
     if group_values[max_value_idx] == 0:
         continue
 
-    # インデックスを計算
-    max_value_idxint = 0 if max_value_idx == 7 else 1
+    # 最大値を持つグループのインデックスを計算
+    max_value_idxint = group_columns.index(max_value_idx)
 
     # 最も高い 'tags.dominant_tss' を持つグループの情報を抽出
     group_chr = row.iloc[1 + max_value_idxint * 12]
