@@ -7,7 +7,7 @@ import re  # 正規表現モジュールをインポート
 # 出力の幅を広げる
 ###pd.set_option('display.max_colwidth', None)  # 列の最大幅を無制限に設定
 pd.set_option('display.max_columns', 100)  # 表示する列数を無制限に設定
-pd.set_option('display.width', 100)        # 出力の幅を広げる
+pd.set_option('display.width', 200)        # 出力の幅を広げる
 pd.set_option('display.max_rows', 100)     # 表示する行数を無制限に設定
 
 def extract_gene_id(attribute_column, file_type):
@@ -1031,7 +1031,7 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
 
     # デバッグ: 最終的なデータフレームのプレビュー
     print("Debug: Final GTF DataFrame preview:")
-    print(final_gtf_df.head(50))  # 最初の50行を確認
+    print(final_gtf_df.head(20))  # 最初の50行を確認
 
 if __name__ == "__main__":
     # コマンドライン引数の設定
