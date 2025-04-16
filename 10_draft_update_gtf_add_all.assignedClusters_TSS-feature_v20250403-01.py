@@ -562,7 +562,7 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
                                     print(f"Original exon entry added to updated_gtf for transcript_id {transcript_id}:")
 
                             # tss_pos が CDS の start よりも小さい場合、TSS feature を追加
-                            if tss_pos < cds[cds['transcript_id'] == transcript_id]['start'].min():
+                            if tss_pos <= cds[cds['transcript_id'] == transcript_id]['start'].min():
                                 # TSS feature の追加処理
                                 if not tss_group.empty:
                                     # TSS feature の属性を作成
@@ -661,7 +661,7 @@ def update_gtf_with_tss(gtf_file, tss_file, output_file):
 
                         # strand == '-' の場合の処理
                         else:
-                            if tss_pos > cds[cds['transcript_id'] == transcript_id]['end'].max():
+                            if tss_pos >= cds[cds['transcript_id'] == transcript_id]['end'].max():
                                 # TSSに最も近いtranscriptのendがgene_endと一致する場合のみgene_endを更新
                                 if transcript_end == gene.iloc[0]['end']:  
                                     new_gene_end = int(tss_pos)  # 更新されたgene_endをnew_gene_endに設定
