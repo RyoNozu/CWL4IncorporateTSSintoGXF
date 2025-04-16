@@ -21,13 +21,9 @@ inputs:
 
   - id: GENOME_FILE
     type: File
-    format: edam:format_3989
+    format: edam:format_3989 # Gzipped format
     label: "genome sequence file (gzipped fasta format) for mapping"
     doc: "genome sequence file (gzipped fasta format) for mapping"
-    default:
-      class: File
-      format: edam:format_3989
-      path: ../Data/Halichoeres_trimaculatus/Halichoeres_trimaculatus-hifiasm-3ddna-v1.1.edit.fna.gz
 
 
   #### seqkit inputs (lower-case) ####

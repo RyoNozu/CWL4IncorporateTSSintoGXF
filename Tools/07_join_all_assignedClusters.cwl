@@ -35,7 +35,7 @@ outputs:
     type: File
     label: "joined assigned clusters"
     doc: "joined assigned clusters file containing merged data from all input files"
-    format: edam:format_3671 # text
+    format: edam:format_3475 # tsv
     outputBinding:
       glob: "all-joined.assignedClusters.tsv"
 
