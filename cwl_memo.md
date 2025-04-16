@@ -290,3 +290,15 @@ cwltool --outdir ./out/ ./Tools/07_join_all_assignedClusters.cwl ./config/Comman
 ### TSSr のDocker image
 
 - 1.0.2 からは野津さんが修正したTSSr (https://github.com/RyoNozu/TSSr) を実行するように変更
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
+## 20250416 memo by yonezawa
+
+- 今日中にワークフローの完成を目指す (paired-end で GTFファイルをインプットとするバージョン)

@@ -1,29 +1,46 @@
 #!/usr/bin/env python3
 
 """
-Modified python script \
-(09-02_extract_tss-feature_from_all-joined.assignedClusters_then_uniq.tss-feature.py)
+Extract TSS features from all-joined.assignedClusters.tsv
+Modified from 09-02_extract_tss-feature_from_all-joined.assignedClusters_then_uniq.tss-feature.py
 
 Usage:
-    python 09-02_uniq_tss_feature_modified.py \
-    -i all-joined.assignedClusters.tsv
+    python3 09-02_uniq_tss_feature_modified.py --input <input_file>
+
+Input:
+    TSV file with assigned clusters (default: all-joined.assignedClusters.tsv)
+
+
 """
+
 import argparse
 import pandas as pd
 
+# コマンドライン引数を解析
+def parse_args():
+    """
+    Parse command line arguments
+    """
+    parser = argparse.ArgumentParser(
+        description='Extract TSS features from assigned clusters TSV file'
+    )
+    parser.add_argument('--input', type=str, default="all-joined.assignedClusters.tsv",
+                        help='Input TSV file (default: all-joined.assignedClusters.tsv)')
+    return parser.parse_args()
+
+# メイン処理
 def main():
     """
     Extract TSS features from all-joined.assignedClusters.tsv
+
+    Usage:
+        python3 09-02_uniq_tss_feature_modified.py --input <input_file>
+
+    Input:
+    
     """
-    # コマンドライン引数の解析
-    parser = argparse.ArgumentParser(description='TSS特徴抽出スクリプト')
-    parser.add_argument(
-        '-i',
-        '--input',
-        required=True,
-        help='Path to input file (all-joined.assignedClusters.tsv)'
-    )
-    args = parser.parse_args()
+    # 引数の解析
+    args = parse_args()
 
     # 入力ファイルを読み込む
     input_file = args.input
@@ -32,10 +49,13 @@ def main():
     # 一時出力ファイル用のデータフレームを作成
     output_rows = []
 
+    # 'tags.dominant_tss' を含む列を動的に取得（接尾語 '_dup' を含む列も対象）
+    group_columns = [col for col in df.columns if 'tags.dominant_tss' in col]
+
     # 各行を処理
     for _, row in df.iterrows():
-        # 1st, 2nd groupの 'tags.dominant_tss' を比較
-        group_values = row[[7, 19]]  # 1st group: 7, 2nd group: 19
+        # 動的に取得したグループ列を使用して比較
+        group_values = row[group_columns]
 
         # NAがあれば0に置き換え
         group_values = group_values.fillna(0)
@@ -47,8 +67,8 @@ def main():
         if group_values[max_value_idx] == 0:
             continue
 
-        # インデックスを計算
-        max_value_idxint = 0 if max_value_idx == 7 else 1
+        # 最大値を持つグループのインデックスを計算
+        max_value_idxint = group_columns.index(max_value_idx)
 
         # 最も高い 'tags.dominant_tss' を持つグループの情報を抽出
         group_chr = row.iloc[1 + max_value_idxint * 12]
@@ -74,48 +94,19 @@ def main():
 
         # 出力行を作成
         output_row = [
-            group_chr,
-            'Cage_analysis', 
-            'cage_cluster', 
-            group_cluster_start,
-            group_cluster_end, group_tags,
-            'TSS', 
-            group_start,
-            dominant_tss,
-            row.iloc[7 + max_value_idxint * 12],
-            group_strand,
-            row['cluster'],
-            group_gene
+            group_chr, 'Cage_analysis', 'cage_cluster', group_cluster_start, group_cluster_end, group_tags, 'TSS', group_start, dominant_tss, row.iloc[7 + max_value_idxint * 12], group_strand, row['cluster'], group_gene
         ]
         output_rows.append(output_row)
 
     # 一時データフレームを作成
-    columns = [
-        "chr",
-        "source",
-        "feature1",
-        "start1", 
-        "end1",
-        "score1",
-        "feature2",
-        "start2",
-        "end2",
-        "tags.dominant_tss",
-        "strand",
-        "cluster",
-        "gene"
-    ]
+    columns = ["chr", "source", "feature1", "start1", "end1", "score1", "feature2", "start2", "end2", "tags.dominant_tss", "strand", "cluster", "gene"]
     temp_df = pd.DataFrame(output_rows, columns=columns)
 
     # 'gene' 列を 'gene_id' に変更
     temp_df.rename(columns={'gene': 'gene_id'}, inplace=True)
 
     # 一時データフレームを "all_tss_feature.tsv" として保存
-    temp_df.to_csv(
-        "all_tss_feature.tsv",
-        sep="\t",
-        index=False
-    )
+    temp_df.to_csv("all_tss_feature.tsv", sep="\t", index=False)
 
     # 'tags.dominant_tss' を数値に変換（必要に応じて）
     temp_df['tags.dominant_tss'] = pd.to_numeric(temp_df['tags.dominant_tss'], errors='coerce')
@@ -148,34 +139,35 @@ def main():
     # 6列目のヘッダーを「tss_pos」に変更
     df1.columns = ['tss_id', 'seqname', 'feature', 'start', 'end', 'strand', 'tss_pos', 'source', 'score', 'gene_id']
 
+
     # 1列目の値でソート
     df1 = df1.sort_values(by='tss_id')
     df2 = df2.sort_values(by='tss_id')
 
     # 分割したデータフレームをそれぞれ保存
-    df1.to_csv("all_cage_cluster_feature_uniq.gene.tsv", sep="\t", index=False)
+    df1.to_csv("all_cage_cluster_feature_quniq.gene.tsv", sep="\t", index=False)
     df2.to_csv("all_tss_feature_uniq.gene.tsv", sep="\t", index=False)
-
-    ### print("2つのデータフレームに分割して保存しました。")
-    ### print("tss_positions.tsv と tss_metadata.tsv が生成されました。")
-
-    ### # 列のヘッダーを変更
-    ### result_df.columns = ['seqname', 'source', 'feature1', 'start1', 'end1', 'feature2', 'start2', 'end2', 'score', 'strand', 'tss_id', 'gene_id']
-    ###
-    ### # 列の順番を変更し、end 列を2度使用
-    ### result_df = result_df[['tss_id', 'seqname', 'feature1', 'start1', 'end1', 'strand', 'end', 'source', 'feature', 'score', 'gene_id']]
-    ###
-    ### # 6列目のヘッダーを「tss_pos」に変更
-    ### result_df.columns = ['tss_id', 'seqname', 'start', 'end', 'strand', 'tss_pos', 'source', 'feature', 'score', 'gene_id']
-    ###
-    ### # 1列目の値でソート
-    ### result_df = result_df.sort_values(by='tss_id')
-    ###
-    ### # 結果を "all_tss_feature_uniq.gene.tsv" として保存
-    ### result_df.to_csv("all_tss_feature_uniq.gene.tsv", sep="\t", index=False)
-    ###
-    ### print("処理が完了しました。")
-    ### print("all_tss_feature.tsv と all_tss_feature_uniq.gene.tsv が生成されました。")
 
 if __name__ == "__main__":
     main()
+
+### print("2つのデータフレームに分割して保存しました。")
+### print("tss_positions.tsv と tss_metadata.tsv が生成されました。")
+
+### # 列のヘッダーを変更
+### result_df.columns = ['seqname', 'source', 'feature1', 'start1', 'end1', 'feature2', 'start2', 'end2', 'score', 'strand', 'tss_id', 'gene_id']
+###
+### # 列の順番を変更し、end 列を2度使用
+### result_df = result_df[['tss_id', 'seqname', 'feature1', 'start1', 'end1', 'strand', 'end', 'source', 'feature', 'score', 'gene_id']]
+###
+### # 6列目のヘッダーを「tss_pos」に変更
+### result_df.columns = ['tss_id', 'seqname', 'start', 'end', 'strand', 'tss_pos', 'source', 'feature', 'score', 'gene_id']
+###
+### # 1列目の値でソート
+### result_df = result_df.sort_values(by='tss_id')
+###
+### # 結果を "all_tss_feature_uniq.gene.tsv" として保存
+### result_df.to_csv("all_tss_feature_uniq.gene.tsv", sep="\t", index=False)
+###
+### print("処理が完了しました。")
+### print("all_tss_feature.tsv と all_tss_feature_uniq.gene.tsv が生成されました。")

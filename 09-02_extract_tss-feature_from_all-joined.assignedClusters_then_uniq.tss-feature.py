@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import pandas as pd
 
 # 入力ファイルを読み込む

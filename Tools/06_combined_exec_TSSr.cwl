@@ -3,7 +3,9 @@
 class: CommandLineTool
 cwlVersion: v1.2
 label: "combined exec TSSr"
-doc: "TSSr (https://github.com/Linlab-slu/TSSr/tree/v0.99.1) execution script for detecting TSSs (transcription start sites) from bam files."
+doc: |
+  TSSr (https://github.com/Linlab-slu/TSSr/tree/v0.99.1) execution Rscript for detecting TSSs (transcription start sites) from bam files processed by STAR mapping process.
+  In this version, Dr. Ryo Nozu modified the TSSr repository (https://github.com/RyoNozu/TSSr).
 
 baseCommand: [Rscript]
 arguments:
@@ -34,7 +36,7 @@ inputs:
     type: File
     format: edam:format_3999 # R script
     label: "custom R script"
-    doc: "custom R script for executing TSSr"
+    doc: "custom R script for executing TSSr. TSSr repository is modified by Dr. Ryo Nozu (https://github.com/RyoNozu/TSSr)"
     default: 
       class: File
       format: edam:format_3999 # R script
@@ -42,12 +44,12 @@ inputs:
 
   - id: referenceFile
     type: File
-    format: edam:format_2206 # Sequence feature table format (text)
+    format: edam:format_2305 # GFF format (including GTF, GFF3)
     label: "reference file (GTF or GFF format)"
     doc: "reference file (GTF or GFF format)"
     default:
       class: File
-      format: edam:format_2206 # Sequence feature table format (text)
+      format: edam:format_2305 # GFF format (including GTF, GFF3)
       location: ../Data/Halichoeres_trimaculatus/braker_correctID_v3.gtf
 
   - id: seedFile
@@ -69,8 +71,8 @@ inputs:
   - id: inputFilesType
     type: string
     label: "input files type"
-    doc: "input files type (bamPairedEnd or bam)"
-    default: bamPairedEnd
+    doc: "input BAM files type (bamPairedEnd or bam). For example, if the processed CAGE-seq files are paired-end files, select “bamPairedEnd”."
+    default: "bamPairedEnd"
 
   - id: organismName
     type: string
@@ -80,12 +82,12 @@ inputs:
 
   - id: metadata
     type: File
-    format: edam:format_3671 # text
+    format: edam:format_3752 # csv
     label: "metadata file"
     doc: "metadata file for grouping bam files"
     default:
       class: File
-      format: edam:format_3671 # text
+      format: edam:format_3752 # csv
       location: ../Data/Halichoeres_trimaculatus/sample_metadata.csv
 
   - id: genome_seqs_dir

@@ -1,9 +1,9 @@
-referenceFile:
+reference_gtf_file:
   class: File
   format: edam:format_2305 # GFF format (including GTF, GFF3)
   path: ../../Data/Halichoeres_trimaculatus/braker_correctID_v3.gtf
 
-seedFile:
+seed_file:
   class: File
   format: edam:format_3671 # text
   path: ../../Data/Halichoeres_trimaculatus/BSgenome.Htrimaculatus.Htriv1.1-seed_2.txt
@@ -12,7 +12,7 @@ threads: 16
 inputFilesType: "bamPairedEnd"
 organismName: "Halichoeres trimaculatus"
 
-metadata:
+metadata_file:
   class: File
   format: edam:format_3752 # csv
   path: ../../Data/Halichoeres_trimaculatus/sample_metadata.csv
@@ -24,8 +24,9 @@ genome_seqs_dir:
 annotation_region_upstream: 1000
 annotation_region_downstream: 0
 annotation_type: "transcripts"
+update_gtf_filename: "add_tss_feature.gtf"
 
-# bamファイル配列の指定方法
+
 bam_files:
   - class: File
     format: edam:format_2572 # bam file

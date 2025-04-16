@@ -65,12 +65,12 @@ inputs:
 
   - id: reference_genome_annotation
     type: File
-    format: edam:format_2306
-    label: "reference genome annotation file"
-    doc: "reference genome annotation file"
+    format: edam:format_2305 # GFF format (including GTF, GFF3)
+    label: "GFF format reference genome annotation file"
+    doc: "GFF format reference genome annotation file"
     default:
       class: File
-      format: edam:format_2306
+      format: edam:format_2305 # GFF format (including GTF, GFF3)
       path: ../Data/Halichoeres_trimaculatus/braker_correctID_v3.gtf
 
 

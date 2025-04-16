@@ -8,7 +8,7 @@ doc: "This custom python script combines all assigned Clusters.txt files process
 baseCommand: [python3]
 
 inputs:
-  - id: prcess_assigned_clusters_script
+  - id: process_assigned_clusters_script
     type: File
     format: edam:format_3996 # python script
     label: "process assigned clusters custom python script"
