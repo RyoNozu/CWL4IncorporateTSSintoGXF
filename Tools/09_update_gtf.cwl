@@ -42,12 +42,12 @@ inputs:
 
   - id: tss_file
     type: File
-    format: edam:format_3671 # text
+    format: edam:format_3475 # tsv
     label: "TSS file"
     doc: "TSS file"
     default:
       class: File
-      format: edam:format_3671 # text
+      format: edam:format_3475 # tsv
       location: ../out/all_tss_feature_uniq.gene.tsv
 
   - id: update_gtf_filename

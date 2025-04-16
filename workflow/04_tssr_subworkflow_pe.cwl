@@ -102,21 +102,28 @@ steps:
       annotation_region_downstream: annotation_region_downstream
       annotation_type: annotation_type
       bam_files: bam_files
-    out: [clustered_consensus_TSSs_bed, clustered_consensus_TSSs_txt, clustered_assigned_TSSs_txt]
+    out:
+      - clustered_consensus_TSSs_bed
+      - clustered_consensus_TSSs_txt
+      - clustered_assigned_TSSs_txt
 
   # Tools/07_join_all_assignedClusters.cwl
   - id: join_all_assignedClusters
     run: ../Tools/07_join_all_assignedClusters.cwl
     in:
       assigned_clusters_files: exec_TSSr/clustered_assigned_TSSs_txt
-    out: [joined_clusters]
+    out:
+      - joined_clusters
 
   # Tools/08_uniq_tss_feature.cwl
   - id: uniq_tss_feature
     run: ../Tools/08_uniq_tss_feature.cwl
     in:
       all_joined_assigned_clusters_file: join_all_assignedClusters/joined_clusters
-    out: [all_cage_cluster_feature_uniq_gene_file, all_tss_feature_uniq_gene_file, all_tss_feature_file]
+    out:
+      - all_cage_cluster_feature_uniq_gene_file
+      - all_tss_feature_uniq_gene_file
+      - all_tss_feature_file
 
   # Tools/09_update_gtf.cwl
   - id: update_gtf
@@ -125,8 +132,9 @@ steps:
       gtf_file: reference_gtf_file
       tss_file: uniq_tss_feature/all_tss_feature_uniq_gene_file
       update_gtf_filename: update_gtf_filename
-    out: [output_gtf_file, stdout_log]
-
+    out:
+      - output_gtf_file
+      - stdout_log
 
 outputs:
   # outputs parameters for Tools/06_combined_exec_TSSr.cwl
@@ -154,6 +162,7 @@ outputs:
   # outputs parameters for Tools/07_join_all_assignedClusters.cwl
   - id: joined_clusters
     type: File
+    format: edam:format_3475 # tsv
     label: "joined assigned clusters"
     doc: "joined assigned clusters file containing merged data from all input files"
     outputSource: join_all_assignedClusters/joined_clusters
@@ -161,18 +170,21 @@ outputs:
   # outputs parameters for Tools/08_uniq_tss_feature.cwl
   - id: all_cage_cluster_feature_uniq_gene_file
     type: File
+    format: edam:format_3475 # tsv
     label: "all cage cluster feature uniq gene file"
     doc: "Contains unique cluster information for each gene, extracted from all_tss_feature.tsv."
     outputSource: uniq_tss_feature/all_cage_cluster_feature_uniq_gene_file
 
   - id: all_tss_feature_uniq_gene_file
     type: File
+    format: edam:format_3475 # tsv
     label: "all tss feature uniq gene file"
     doc: "Contains unique TSS information for each gene, extracted from all_tss_feature.tsv"
     outputSource: uniq_tss_feature/all_tss_feature_uniq_gene_file
 
   - id: all_tss_feature_file
     type: File
+    format: edam:format_3475 # tsv
     label: "all tss feature uniq gene file"
     doc: "Contains TSS cluster information filtered based on the tag accumulation at the dominant TSS (tags.dominant_tss). Includes clusters from groups with the highest tag accumulation."
     outputSource: uniq_tss_feature/all_tss_feature_file

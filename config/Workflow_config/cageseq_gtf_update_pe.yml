@@ -5,7 +5,11 @@ GENOME_FILE:
   format: edam:format_3989
   location: ../../Data/Halichoeres_trimaculatus/Halichoeres_trimaculatus-hifiasm-3ddna-v1.1.edit.fna.gz
 
-seqkit_output_dir_name: seqs_by_scaffold
+REFERENCE_GENOME_ANNOTATION:
+  class: File
+  format: edam:format_2305
+  location: ../../Data/Halichoeres_trimaculatus/braker_correctID_v3.gtf
+
 
 fastq1_files:
   - class: File
@@ -71,9 +75,25 @@ fastq2_files:
     format: edam:format_1930
     location: ../../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.M4/MK.M4_R2.fastq.gz
     
-fastp_compression_level: 9
-star_index_dir_name: star_genome_idx
-reference_genome_annotation:
+
+seed_file:
   class: File
-  format: edam:format_2306
-  location: ../../Data/Halichoeres_trimaculatus/braker_correctID_v3.gtf
+  format: edam:format_3671
+  location: ../../Data/Halichoeres_trimaculatus/BSgenome.Htrimaculatus.Htriv1.1-seed_2.txt
+
+organism_name: "Halichoeres trimaculatus"
+
+metadata_file:
+  class: File
+  format: edam:format_3752
+  location: ../../Data/Halichoeres_trimaculatus/sample_metadata.csv
+
+annotation_region_upstream: 1000
+annotation_region_downstream: 0
+annotation_type: "transcripts"
+update_gtf_filename: "add_tss_feature.gtf"
+
+
+
+
+

@@ -302,3 +302,10 @@ cwltool --outdir ./out/ ./Tools/07_join_all_assignedClusters.cwl ./config/Comman
 ## 20250416 memo by yonezawa
 
 - 今日中にワークフローの完成を目指す (paired-end で GTFファイルをインプットとするバージョン)
+- 一応すべての出力結果を捕捉するバージョンでワークフローを記述
+- 取り急ぎキャッシュを使って一通りできるかチェック中
+- 明日はこれをcacheなしで一応実行してみる
+
+```bash
+cwltool --debug --cachedir ./cwl_cache/ --outdir ./test/ ./workflow/cageseq_gtf_update_pe.cwl ./config/Workflow_config/cageseq_gtf_update_pe.yml
+```
