@@ -36,7 +36,7 @@ This workflow determines TSS based on the analysis of CAGE-seq data and incorpor
     # case: paired-end reads
     cwltool --debug --cachedir ./cwl_cache/ --outdir ./test/ ./workflow/cageseq_gtf_update_pe.cwl ./config/Workflow_config/cageseq_gtf_update_pe.yml
     ```
-    † Prep or edit a yml file referring to the [template]()  
+    † Prep a yml file referring to the [template]()  
 
 ## Input files  
 
