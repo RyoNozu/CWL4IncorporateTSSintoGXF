@@ -18,7 +18,9 @@ This workflow determines TSS based on the analysis of CAGE-seq data and incorpor
     conda install -c conda-forge cwltool 
     ``` 
 
-- docker
+- [docker](https://www.docker.com/)  
+
+    † and Docker Desktop must be running  
 
 ## Simple usage  
 
