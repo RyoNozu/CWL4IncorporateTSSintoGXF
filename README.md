@@ -1,30 +1,42 @@
 # CWL4IncorporateTSSintoGXF
 
--   
+This workflow determines TSS based on the analysis of CAGE-seq data and incorporates TSS information and 5'UTR information calculated based on TSS information into the gene annotation file (gff/gtf). The R package, [TSSr](https://github.com/Linlab-slu/TSSr), is used to determine TSS.  
 
 ## Requirements
 
-- [cwltool](https://github.com/common-workflow-language/cwltool)    
+- [cwltool](https://github.com/common-workflow-language/cwltool)  
 
-```
-# for example
-conda create -n cwltool
-conda activate cwltool
-conda install -c conda-forge cwltool
-```
+    Install using pip  
+    ```
+    pip  install cwltool  
+    ```
+
+    Install using conda  
+    ```
+    conda create -n cwltool  
+    conda activate cwltool  
+    conda install -c conda-forge cwltool 
+    ``` 
+
 
 - docker
 
-## Simple usage
-- clone this repository  
-```
-git clone https://github.com/RyoNozu/CWL4IncorporateTSSintoGXF.git
-cd CWL4IncorporateTSSintoGXF
-```
-- run workflow  
-```
-cwltool --debug --outdir ./out/ ./workflow/cageseq_gtf_update_pe.cwl ./config/Commandlinetool_config/06_tssr_config.yaml
-```
+## Simple usage  
+
+- Clone this repository  
+
+    ```
+    git clone https://github.com/RyoNozu/CWL4IncorporateTSSintoGXF.git
+    cd CWL4IncorporateTSSintoGXF
+    ```
+
+- Run workflow  
+
+    ```
+    # case: paired-end reads
+    cwltool --debug --cachedir ./cwl_cache/ --outdir ./test/ ./workflow/cageseq_gtf_update_pe.cwl ./config/Workflow_config/cageseq_gtf_update_pe.yml
+    ```
+    † Prep or edit a yml file referring to the [template]()  
 
 ## Input files  
 
@@ -32,10 +44,12 @@ cwltool --debug --outdir ./out/ ./workflow/cageseq_gtf_update_pe.cwl ./config/Co
 - reference genome (fasta)  
 - gene annotation file (gff/gtf)  
 - (BSgenome_data_package_seed_file (.txt))  
-        > refere to forgeBSgenomeDataPkg function in [BSgenomeForge](https://bioconductor.org/packages/release/bioc/html/BSgenomeForge.html) packag  
+        > refere to forgeBSgenomeDataPkg function in [BSgenomeForge](https://bioconductor.org/packages/release/bioc/html/BSgenomeForge.html) package  
 
 ## Output files  
 
 - updated gxf file (.gff/gtf)  
+
+## FYI: Running time
 
 ***
