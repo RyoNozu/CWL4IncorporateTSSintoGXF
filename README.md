@@ -18,7 +18,6 @@ This workflow determines TSS based on the analysis of CAGE-seq data and incorpor
     conda install -c conda-forge cwltool 
     ``` 
 
-
 - docker
 
 ## Simple usage  
@@ -33,10 +32,12 @@ This workflow determines TSS based on the analysis of CAGE-seq data and incorpor
 - Run workflow  
 
     ```
-    # case: paired-end reads
+    # for paired-end reads case
     cwltool --debug --cachedir ./cwl_cache/ --outdir ./test/ ./workflow/cageseq_gtf_update_pe.cwl ./config/Workflow_config/cageseq_gtf_update_pe.yml
     ```
-    † Prep a yml file referring to the [template](https://github.com/RyoNozu/CWL4IncorporateTSSintoGXF/blob/main/config/Workflow_config/cageseq_gtf_update_pe.yml)  
+    - Prep your case yml file referring to the [template](https://github.com/RyoNozu/CWL4IncorporateTSSintoGXF/blob/main/config/Workflow_config/cageseq_gtf_update_pe.yml)  
+        • Refer to the [Link](https://view.commonwl.org/workflows/github.com/RyoNozu/CWL4IncorporateTSSintoGXF/blob/main/workflow/cageseq_gtf_update_pe.cwl) for details on each parameter that needs to be specified  
+    - A single-ended version (cageseq_gtf_update_se.cwl) is in prep as of 20240417  
 
 ## Input files  
 
