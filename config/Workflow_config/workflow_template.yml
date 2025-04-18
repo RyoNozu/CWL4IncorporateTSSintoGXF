@@ -1,0 +1,74 @@
+THREADS: 16
+GENOME_FILE:
+  class: File
+  format: edam:format_3989 # GZIP format
+  location: <Path to gzipped genome fasta file>
+
+REFERENCE_GENOME_ANNOTATION:
+  class: File
+  format: edam:format_2305 # GFF feature format (including GTF, GFF3)
+  location: <Path to GXF (including GTF, GFF3) file>
+
+seed_file:
+  class: File
+  format: edam:format_3671 # text file format
+  location: <Path to your seed file>
+
+organism_name: <Organism name>
+
+metadata_file:
+  class: File
+  format: edam:format_3752 # CSV file format
+  location: <Path to your metadata file>
+
+annotation_region_upstream: <Upstream annotation region (e.g. 1000)>
+annotation_region_downstream: <Downstream annotation region (e.g. 0)>
+# annotation_type: "genes"
+update_gtf_filename: <Output GTF file name>
+
+fastq1_files: # The following example shows four FASTQ files for CAGE-seq of Pair-end data
+  - class: File
+    format: edam:format_1930 # FASTQ file format
+    location: <Path to your fastq1 file>
+  - class: File
+    format: edam:format_1930
+    location: <Path to your fastq1 file>
+  - class: File
+    format: edam:format_1930
+    location: <Path to your fastq1 file>
+  - class: File
+    format: edam:format_1930
+    location: <Path to your fastq1 file>
+  
+  # If there are more FASTQ files, describe “class”, “format”, and “file location”.
+
+  # - class: File
+  #   format: edam:format_1930
+  #   location: <Path to your fastq1 file>
+  # ....
+
+fastq2_files: # The following example shows four FASTQ files for CAGE-seq of Pair-end data
+  - class: File
+    format: edam:format_1930
+    location: <Path to your fastq2 file>
+  - class: File
+    format: edam:format_1930
+    location: <Path to your fastq2 file>
+  - class: File
+    format: edam:format_1930
+    location: <Path to your fastq2 file>
+  - class: File
+    format: edam:format_1930
+    location: <Path to your fastq2 file>
+
+ # If there are more FASTQ files, describe “class”, “format”, and “file location”.
+
+  # - class: File
+  #   format: edam:format_1930
+  #   location: <Path to your fastq2 file>
+  # ....
+
+
+
+
+
