@@ -1,9 +1,9 @@
 FROM bioconductor/bioconductor:RELEASE_3_20
 
 LABEL maintainer="Sora Yonezawa <d246887@hiroshima-u.ac.jp>"
-LABEL description="R environment for TSSr analysis"
+LABEL description="sorayone56/tssr-r-env: R environment for TSSr analysis"
 
-# システム依存ライブラリのインストール
+# Install system dependencies
 RUN apt-get update && apt-get -y upgrade && apt-get install -y --no-install-recommends \
     libcurl4-gnutls-dev \
     libssl-dev \
@@ -19,12 +19,15 @@ RUN apt-get update && apt-get -y upgrade && apt-get install -y --no-install-reco
     libgit2-dev \
     pandoc
 
-# R パッケージのインストール
+# Install R packages
 COPY install-r-packages_v2.sh /tmp/
-RUN chmod +x /tmp/install-r-packages_v2.sh && /tmp/install-r-packages_v2.sh
+RUN chmod +x /tmp/install-r-packages_v2.sh && \
+    /tmp/install-r-packages_v2.sh && \
+    # Remove the temporary script after execution
+    rm /tmp/install-r-packages_v2.sh
 
 ENV R_LIBS_USER=/home/rstudio/R/library
 RUN mkdir -p /home/rstudio/R/library && chmod 777 -R /home/rstudio/R
 
-# 作業ディレクトリの設定
+# Set working directory
 WORKDIR /work
