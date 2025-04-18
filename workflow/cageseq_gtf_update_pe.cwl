@@ -81,7 +81,7 @@ inputs:
   - id: annotation_type
     type: string
     label: "annotation type"
-    doc: "annotation type (\"genes\" or \"transcripts\")"
+    doc: "annotation type ('genes' or 'transcripts')"
     default: "genes"
     
   - id: update_gtf_filename
@@ -164,20 +164,13 @@ steps:
   - id: update_gtf
     run: ./04_tssr_subworkflow_pe.cwl
     label: "step5: The process of updating the GFF format file from identifying TSS (transcription start sites) from CAGE-seq data"
-    doc: |
-      "
-      The process of updating the GFF format file from identifying TSS - transcription start sites - from paired-end CAGE-seq data.
-      This workflow consists of the following files:
-      (1) Tools/06_combined_exec_TSSr.cwl,
-      (2) Tools/07_join_all_assignedClusters.cwl,
-      (3) Tools/08_uniq_tss_feature.cwl,
-      (4) Tools/09_update_gtf.cwl
-      "
-      in:
+    doc: "The process of updating the GFF format file from identifying TSS - transcription start sites - from paired-end CAGE-seq data."
+    in:
       reference_gtf_file: REFERENCE_GENOME_ANNOTATION
       seed_file: seed_file
       threads: THREADS
       #input_file_type: bamPairedEnd
+      organism_name: organism_name
       metadata_file: metadata_file
       genome_seqs_dir: split_genome_seqs/output_dir # from seqkit process
       annotation_region_upstream: annotation_region_upstream

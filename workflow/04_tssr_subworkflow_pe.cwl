@@ -42,7 +42,6 @@ inputs:
     type: string
     label: "organism name"
     doc: "organism name"
-    default: "Halichoeres trimaculatus"
 
   - id: metadata_file
     type: File
