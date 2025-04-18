@@ -1,8 +1,8 @@
 #!/usr/bin/env cwl-runner
 cwlVersion: v1.2
 class: Workflow
-label: "mapping CAGEseq data and update GTF file"
-doc: "mapping CAGEseq data and update GTF file"
+label: "CWL4IncorporateTSSintoGXF"
+doc: "CWL4IncorporateTSSintoGXF: mapping CAGE-seq data and add TSS information to GXF format (GFF/GTF) file"
 
 requirements:
   # https://www.commonwl.org/user_guide/topics/workflows.html#scattering-steps
