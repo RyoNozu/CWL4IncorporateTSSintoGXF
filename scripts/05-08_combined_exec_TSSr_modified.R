@@ -36,7 +36,7 @@ option_list <- list(
     c("-r", "--refSource"),
     type = "character",
     default = NULL,
-    help="Reference source file (GTF or GFF file)", 
+    help="Reference source file (GTF or GFF file)",
     metavar="FILE"
   ),
   make_option(

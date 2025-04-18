@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# pylint: disable=line-too-long
+
 import pandas as pd
 import csv
 import argparse

@@ -91,7 +91,7 @@ metadata_file:
 annotation_region_upstream: 1000
 annotation_region_downstream: 0
 annotation_type: "transcripts"
-update_gtf_filename: "add_tss_feature.gtf"
+update_gtf_filename: "add_tss_feature_transcripts.gtf"
 
 
 

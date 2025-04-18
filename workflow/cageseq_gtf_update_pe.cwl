@@ -82,7 +82,7 @@ inputs:
     type: string
     label: "annotation type"
     doc: "annotation type (\"genes\" or \"transcripts\")"
-    default: "transcripts"
+    default: "genes"
     
   - id: update_gtf_filename
     type: string
@@ -182,32 +182,32 @@ steps:
 
 #### outputs (upper-case) ####
 outputs:
-  - id: SEQKIT_OUTPUT_DIR
-    type: Directory
-    label: "seqkit output directory"
-    doc: "seqkit output directory"
-    outputSource: split_genome_seqs/output_dir
+  # - id: SEQKIT_OUTPUT_DIR
+  #   type: Directory
+  #   label: "seqkit output directory"
+  #   doc: "seqkit output directory"
+  #   outputSource: split_genome_seqs/output_dir
 
-  - id: SPLIT_GENOME_SEQUENCE
-    type: File[]
-    label: "split genome sequence files"
-    doc: "split genome sequence files"
-    outputSource: split_genome_seqs/split_seqs
+  # - id: SPLIT_GENOME_SEQUENCE
+  #   type: File[]
+  #   label: "split genome sequence files"
+  #   doc: "split genome sequence files"
+  #   outputSource: split_genome_seqs/split_seqs
 
 
-  - id: TRIMMED_FASTQ1_FILES
-    type: File[]
-    label: "trimmed fastq1 files"
-    doc: "trimmed fastq1 files"
-    format: edam:format_1930 # fastq format
-    outputSource: trimming_fastp_pe/trimmed_fastq1_files
+  # - id: TRIMMED_FASTQ1_FILES
+  #   type: File[]
+  #   label: "trimmed fastq1 files"
+  #   doc: "trimmed fastq1 files"
+  #   format: edam:format_1930 # fastq format
+  #   outputSource: trimming_fastp_pe/trimmed_fastq1_files
 
-  - id: TRIMMED_FASTQ2_FILES
-    type: File[]
-    label: "trimmed fastq2 files"
-    doc: "trimmed fastq2 files"
-    format: edam:format_1930 # fastq format
-    outputSource: trimming_fastp_pe/trimmed_fastq2_files
+  # - id: TRIMMED_FASTQ2_FILES
+  #   type: File[]
+  #   label: "trimmed fastq2 files"
+  #   doc: "trimmed fastq2 files"
+  #   format: edam:format_1930 # fastq format
+  #   outputSource: trimming_fastp_pe/trimmed_fastq2_files
 
   - id: TRIMMING_REPORT_HTML_FILES
     type: File[]
@@ -238,11 +238,11 @@ outputs:
     outputSource: trimming_fastp_pe/stderr_log_files
 
 
-  - id: STAR_INDEX_DIR
-    type: Directory
-    label: "STAR index directory"
-    doc: "STAR index directory"
-    outputSource: create_star_index/star_index_dir
+  # - id: STAR_INDEX_DIR
+  #   type: Directory
+  #   label: "STAR index directory"
+  #   doc: "STAR index directory"
+  #   outputSource: create_star_index/star_index_dir
 
   - id: STAR_INDEX_STDOUT_LOG
     type: File
