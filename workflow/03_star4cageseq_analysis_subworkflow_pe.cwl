@@ -1,7 +1,7 @@
 #!/usr/bin/env cwl-runner
 cwlVersion: v1.2
 class: Workflow
-label: "STAR for CAGE-Seq reads analysis"
+label: "step4: STAR for CAGE-Seq reads analysis"
 doc: "STAR for CAGE-Seq reads analysis"
 
 requirements:

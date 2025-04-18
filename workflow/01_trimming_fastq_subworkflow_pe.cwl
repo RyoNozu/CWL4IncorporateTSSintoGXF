@@ -1,7 +1,7 @@
 #!/usr/bin/env cwl-runner
 cwlVersion: v1.2
 class: Workflow
-label: "trimming fastq files (paired-end)"
+label: "step2: trimming fastq files (paired-end)"
 doc: "multiple fastq files trimming process using fastp version 0.23.4 and scatter feature requirement"
 
 requirements:

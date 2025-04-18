@@ -32,10 +32,6 @@ inputs:
     format: edam:format_3475 # tsv
     label: "all joined assigned clusters file"
     doc: "all joined assigned clusters file"
-    default:
-      class: File
-      format: edam:format_3475 # tsv
-      location: ../test/all-joined.assignedClusters.tsv
 
 outputs:
   - id: all_cage_cluster_feature_uniq_gene_file

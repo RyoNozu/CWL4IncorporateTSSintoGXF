@@ -32,19 +32,13 @@ inputs:
       format: edam:format_1930
       label: "fastq1"
       doc: "fastq1 file (e.g. MK.F1_R1.fastq.gz)"
-      default:
-        class: File
-        format: edam:format_1930
-        path: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.F1/MK.F1_R1.fastq.gz
+
     - id: fastq2
       type: File
       format: edam:format_1930
       label: "fastq2"
       doc: "fastq2 file (e.g. MK.F1_R2.fastq.gz)"
-      default:
-        class: File
-        format: edam:format_1930
-        path: ../Data/Halichoeres_trimaculatus/CAGE/All_data/Fastq/MK.F1/MK.F1_R2.fastq.gz
+
     - id: compression_level
       label: "compression level"
       doc: "compression level (default: 9)"

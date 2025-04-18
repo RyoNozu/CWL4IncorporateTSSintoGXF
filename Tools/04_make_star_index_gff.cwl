@@ -17,19 +17,13 @@ inputs:
     label: "reference genome fasta file"
     doc: "reference genome fasta file"
     format: edam:format_1929
-    default:
-      class: File
-      format: edam:format_1929
-      location: ../Data/Halichoeres_trimaculatus/Halichoeres_trimaculatus-hifiasm-3ddna-v1.1.edit.fna
+
   - id: reference_genome_annotation
     type: File
     label: "reference genome annotation file"
     doc: "reference genome annotation file"
-    format: edam:format_2306
-    default:
-      class: File
-      format: edam:format_2306
-      location: ../Data/Halichoeres_trimaculatus/braker_correctID_v3.gtf
+    format: edam:format_2305
+
   - id: star_threads
     type: int
     label: "threads for star"

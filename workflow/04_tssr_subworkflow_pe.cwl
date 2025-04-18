@@ -1,7 +1,7 @@
 #!/usr/bin/env cwl-runner
 cwlVersion: v1.2
 class: Workflow
-label: "The process of updating the GFF format file from identifying TSS (transcription start sites) from CAGE-seq data"
+label: "step5: The process of updating the GFF format file from identifying TSS (transcription start sites) from CAGE-seq data"
 doc: |
   "
   The process of updating the GFF format file from identifying TSS - transcription start sites - from paired-end CAGE-seq data.

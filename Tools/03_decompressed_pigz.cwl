@@ -29,10 +29,6 @@ inputs:
     label: "input compressed reference genome fasta file"
     doc: "input compressed reference genome fasta file"
     format: edam:format_3989
-    default:
-      class: File
-      format: edam:format_3989
-      path: ../Data/Halichoeres_trimaculatus/Halichoeres_trimaculatus-hifiasm-3ddna-v1.1.edit.fna.gz
 
 stdout: $(inputs.input_compressed_file.nameroot)
 

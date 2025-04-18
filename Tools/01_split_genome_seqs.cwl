@@ -2,8 +2,8 @@
 # Generated from: seqkit ./Data/Halichoeres_trimaculatus/Halichoeres_trimaculatus-hifiasm-3ddna-v1.1.edit.fna.gz -i -O ./seqs_by_scaffold
 class: CommandLineTool
 cwlVersion: v1.2
-label: "split genome seqs by scaffold"
-doc: split genome seqs by scaffold. using seqkit version 2.8.2.
+label: "step1: split genome seqs by scaffold"
+doc: "split genome seqs by scaffold. using seqkit version 2.8.2."
 
 requirements:
   ShellCommandRequirement: {}
@@ -15,10 +15,7 @@ inputs:
     format: edam:format_3989
     label: "genome sequence gzipped file"
     doc: "genome sequence gzipped file"
-    default:
-      class: File
-      format: edam:format_3989
-      location: ../Data/Halichoeres_trimaculatus/Halichoeres_trimaculatus-hifiasm-3ddna-v1.1.edit.fna.gz
+
   - id: output_dir_name
     type: string
     label: "output directory name"

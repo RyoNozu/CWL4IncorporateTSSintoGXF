@@ -35,20 +35,12 @@ inputs:
     format: edam:format_2305 # GFF format (including GTF, GFF3)
     label: "GTF/GFF file"
     doc: "GTF/GFF file"
-    default:
-      class: File
-      format: edam:format_2305 # GFF format (including GTF, GFF3)
-      location: ../Data/Halichoeres_trimaculatus/braker_correctID_v3.gtf
 
   - id: tss_file
     type: File
     format: edam:format_3475 # tsv
     label: "TSS file"
     doc: "TSS file"
-    default:
-      class: File
-      format: edam:format_3475 # tsv
-      location: ../out/all_tss_feature_uniq.gene.tsv
 
   - id: update_gtf_filename
     type: string

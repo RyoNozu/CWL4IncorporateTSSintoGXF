@@ -47,20 +47,12 @@ inputs:
     format: edam:format_2305 # GFF format (including GTF, GFF3)
     label: "reference file (GTF or GFF format)"
     doc: "reference file (GTF or GFF format)"
-    default:
-      class: File
-      format: edam:format_2305 # GFF format (including GTF, GFF3)
-      location: ../Data/Halichoeres_trimaculatus/braker_correctID_v3.gtf
 
   - id: seedFile
     type: File
     format: edam:format_3671 # text
     label: "seed file"
     doc: "seed file for BSgenome package"
-    default:
-      class: File
-      format: edam:format_3671 # text
-      location: ../Data/Halichoeres_trimaculatus/BSgenome.Htrimaculatus.Htriv1.1-seed_2.txt
 
   - id: threads
     type: int
@@ -85,18 +77,11 @@ inputs:
     format: edam:format_3752 # csv
     label: "metadata file"
     doc: "metadata file for grouping bam files"
-    default:
-      class: File
-      format: edam:format_3752 # csv
-      location: ../Data/Halichoeres_trimaculatus/sample_metadata.csv
 
   - id: genome_seqs_dir
     type: Directory
     label: "genome sequences directory"
     doc: "genome sequences directory processed by seqkit process"
-    default:
-      class: Directory
-      location: ../out/seqs_by_scaffold
 
 
   - id: annotation_region_upstream

@@ -95,6 +95,8 @@ steps:
   #### 1. split genome sequences by scaffold ####
   - id: split_genome_seqs
     run: ../Tools/01_split_genome_seqs.cwl
+    label: "step1: split genome seqs by scaffold"
+    doc: "split genome seqs by scaffold. using seqkit version 2.8.2."
     in:
       genome_seqs: GENOME_FILE
       # output_dir_name: variable
@@ -106,6 +108,8 @@ steps:
   #### 2. trimming fastq files ####
   - id: trimming_fastp_pe
     run: ./01_trimming_fastq_subworkflow_pe.cwl
+    label: "step2: trimming fastq files (paired-end)"
+    doc: "multiple fastq files trimming process using fastp version 0.23.4 and scatter feature requirement"
     in:
       fastq1_files: fastq1_files
       fastq2_files: fastq2_files
@@ -123,6 +127,8 @@ steps:
   #### 3. create STAR index ####
   - id: create_star_index
     run: ./02_star_index_subworkflow.cwl
+    label: "step3: create STAR index"
+    doc: "create STAR index for mapping CAGE-Seq data (step 1: decompress reference genome fasta file, step 2: create STAR index)"
     in:
       create_star_index_threads: THREADS
       input_compressed_file: GENOME_FILE
@@ -137,6 +143,8 @@ steps:
   #### 4. mapping CAGEseq data####
   - id: mapping_cageseq_data
     run: ./03_star4cageseq_analysis_subworkflow_pe.cwl
+    label: "step4: STAR for CAGE-Seq reads analysis"
+    doc: "STAR for CAGE-Seq reads analysis"
     in:
       star_index_dir: create_star_index/star_index_dir
       cage_seq_reads_1: trimming_fastp_pe/trimmed_fastq1_files
@@ -155,12 +163,21 @@ steps:
   #### 5. update GTF file ####
   - id: update_gtf
     run: ./04_tssr_subworkflow_pe.cwl
-    in:
+    label: "step5: The process of updating the GFF format file from identifying TSS (transcription start sites) from CAGE-seq data"
+    doc: |
+      "
+      The process of updating the GFF format file from identifying TSS - transcription start sites - from paired-end CAGE-seq data.
+      This workflow consists of the following files:
+      (1) Tools/06_combined_exec_TSSr.cwl,
+      (2) Tools/07_join_all_assignedClusters.cwl,
+      (3) Tools/08_uniq_tss_feature.cwl,
+      (4) Tools/09_update_gtf.cwl
+      "
+      in:
       reference_gtf_file: REFERENCE_GENOME_ANNOTATION
       seed_file: seed_file
       threads: THREADS
       #input_file_type: bamPairedEnd
-      organism_name: organism_name
       metadata_file: metadata_file
       genome_seqs_dir: split_genome_seqs/output_dir # from seqkit process
       annotation_region_upstream: annotation_region_upstream

@@ -12,27 +12,19 @@ inputs:
     type: Directory
     label: "STAR index directory"
     doc: "STAR index directory"
-    default:
-      class: Directory
-      location: ../out/star_genome_idx
+
   - id: cage_seq_read_1
     type: File
     label: "CAGE-Seq read 1"
     doc: "CAGE-Seq read FASTQ file 1 (already trimmed)"
     format: edam:format_1930
-    default:
-      class: File
-      format: edam:format_1930
-      location: ../out/MK.F1_R1_trim.fq.gz
+
   - id: cage_seq_read_2
     type: File
     label: "CAGE-Seq read 2"
     doc: "CAGE-Seq read FASTQ file 2 (already trimmed)"
     format: edam:format_1930
-    default:
-      class: File
-      format: edam:format_1930
-      location: ../out/MK.F1_R2_trim.fq.gz
+
   - id: star_threads
     type: int
     label: "threads for star"

@@ -1,7 +1,7 @@
 #!/usr/bin/env cwl-runner
 cwlVersion: v1.2
 class: Workflow
-label: "create STAR index"
+label: "step3: create STAR index"
 doc: "create STAR index for mapping CAGE-Seq data (step 1: decompress reference genome fasta file, step 2: create STAR index)"
 
 inputs:
@@ -16,10 +16,6 @@ inputs:
     label: "compressed fasta file"
     doc: "input compressed reference genome fasta file (gzipped)"
     format: edam:format_3989
-    default:
-      class: File
-      format: edam:format_3989
-      path: ../Data/Halichoeres_trimaculatus/Halichoeres_trimaculatus-hifiasm-3ddna-v1.1.edit.fna.gz
 
 
   - id: star_index_dir_name
@@ -33,11 +29,6 @@ inputs:
     label: "GFF format reference genome annotation file"
     doc: "GFF format reference genome annotation file"
     format: edam:format_2305 # GFF format (including GTF, GFF3)
-    default:
-      class: File
-      format: edam:format_2305 # GFF format (including GTF, GFF3)
-      path: ../Data/Halichoeres_trimaculatus/braker_correctID_v3.gtf
-
 
 steps:
   - id: decompress_reference_genome
