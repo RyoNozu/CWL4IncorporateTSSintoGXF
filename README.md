@@ -1,3 +1,10 @@
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+![GitHub last commit (branch)](https://img.shields.io/github/last-commit/RyoNozu/CWL4IncorporateTSSintoGXF/main)
+[![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
+[![Lab Website](https://img.shields.io/badge/Lab%20Website-bonohulab-informational?style=flat-square)](https://bonohu.hiroshima-u.ac.jp/)
+
+&nbsp;
+
 # CWL4IncorporateTSSintoGXF
 
 This workflow determines TSS based on the analysis of CAGE-seq data and incorporates TSS information and 5'UTR information calculated based on TSS information into the gene annotation file (gff/gtf). The R package, [TSSr](https://github.com/Linlab-slu/TSSr), is used to determine TSS.  
